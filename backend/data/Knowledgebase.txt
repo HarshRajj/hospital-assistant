@@ -1,0 +1,475 @@
+﻿# Arogya Med-City Hospital: Reception & Patient Support Knowledge Base
+
+## 1. General Hospital Information
+- **Hospital Name:** Arogya Med-City Hospital
+- **Main Address:** 123 Health Avenue, Med-City, 431001
+- **Main Phone Line:** (555) 100-2000 (Use for all public inquiries and transfers)
+- **Website:** [www.arogyamedcity.com](http://www.arogyamedcity.com)
+- **Patient Portal:** [www.arogyamedcity.com/portal](http://www.arogyamedcity.com/portal)
+- **Internal Emergency Line:** Ext. 911 (For on-site medical emergencies, fires, or security threats)
+- **External Emergency:** 911 (For off-site emergencies)
+
+---
+
+## 2. Patient & Visitor Services (Amenities)
+
+### Main Information Desk
+- **Location:** Main Lobby
+
+### Parking
+- **Location:** Main visitor parking garage accessible from Health Avenue.
+- **Rates:** $2/hour, $10 maximum per day.
+- **Valet:** Available at the Main Entrance, 8:00 AM - 6:00 PM, for a flat fee of $15.
+
+### Cafeteria ("The Healing Plate")
+- **Location:** Wing B, Ground Floor
+- **Hours:**
+  - **Breakfast:** 6:30 AM - 9:30 AM
+  - **Lunch:** 11:00 AM - 2:00 PM
+  - **Dinner:** 4:30 PM - 7:00 PM
+
+### Coffee Shop ("Quick Infusion")
+- **Location:** Main Lobby
+- **Hours:**
+  - 6:00 AM - 8:00 PM (Mon-Fri)
+  - 7:00 AM - 3:00 PM (Sat-Sun)
+
+### Vending Machines
+- **Availability:** 24/7
+- **Locations:**
+  - ER waiting room
+  - Patient floors 2, 3, and 4 near the visitor elevators
+
+### Wi-Fi
+- **Network Name:** Arogya-Guest
+- **Password:** No password required (Open network)
+
+### Pharmacy
+- **Location:** Main Lobby, near the main entrance
+- **Hours:**
+  - 24/7 for inpatients and ER prescriptions
+  - Outpatient prescription pickup: 8:00 AM - 9:00 PM daily
+
+### ATM
+- **Location:** Main Lobby, next to the Coffee Shop
+
+### Gift Shop
+- **Location:** Main Lobby
+- **Hours:**
+  - 9:00 AM - 7:00 PM (Mon-Fri)
+  - 11:00 AM - 4:00 PM (Sat-Sun)
+
+### Spiritual Care (Interfaith Chapel)
+- **Location:** Wing D, Ground Floor
+- **Hours:** Open 24/7 for quiet reflection
+- **Services:** To request a visit from a chaplain, contact Patient Relations at Ext. 8800
+
+### Lost and Found
+- **Contact:** Security at Ext. 1000
+
+---
+
+## 3. Appointments & Registration
+
+### Booking an Appointment
+- **Online (Preferred):** Use the patient portal: [www.arogyamedcity.com/portal](http://www.arogyamedcity.com/portal)
+- **Phone:** Call the main line (555) 100-2000 and select the "Appointments" option.
+- **Walk-in:** Visit the registration desk in the main lobby. Walk-in appointments are subject to availability and wait times may be significant.
+
+### Required Documents (New Patients)
+- Government-issued photo ID (e.g., Aadhar Card, Passport, Driver's License)
+- Valid insurance card
+- Referral letter from a primary care physician (if required by your insurance plan)
+- List of current medications
+
+### Appointment Policies
+- **Cancellation/Rescheduling:** Must be done at least 24 hours in advance via the patient portal or by calling the appointments desk.
+- **Late Policy:** If you are more than 15 minutes late, your appointment may be rescheduled to avoid delaying other patients. Please call the department if you are running late.
+- **No-Show Policy:** Patients who miss an appointment without providing 24-hour notice may be subject to a "no-show" fee.
+
+### Wait-Time Expectations (Standard)
+- **General OPD:** 15-30 minutes after scheduled time
+- **Specialist Clinics:** 30-45 minutes after scheduled time
+- **Emergency Room:** Varies based on triage priority. Critical cases are seen immediately, regardless of arrival time.
+
+---
+
+## 4. Department & Doctor Directory
+
+### Total Departments: 20+
+**Specialties Available:** Cardiology, Pediatrics, Orthopedics, Neurology, Oncology, Dermatology, General Surgery, General Medicine, Gastroenterology, Nephrology, OB-GYN, Ophthalmology, ENT, Psychiatry, Pulmonology, Endocrinology, Urology, Rheumatology, Physiotherapy, Radiology, Emergency Medicine
+
+---
+
+### Cardiology
+- **Location:** Wing A, 3rd Floor
+- **Contact:** Ext. 3100
+- **Description:** Comprehensive care for heart-related conditions
+- **Common Conditions Treated:** Hypertension, coronary artery disease, heart failure, arrhythmia, post-heart attack care
+- **Staff Physicians:**
+  - **Dr. Harsh Sharma (MD, FACC)**
+    - **Languages:** English, Hindi, Marathi
+    - **Availability:** Mon-Fri, 9:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes
+
+### Pediatrics
+- **Location:** Wing B, 1st Floor
+- **Contact:** Ext. 1200
+- **Description:** Medical care for infants, children, and adolescents
+- **Common Conditions Treated:** Routine check-ups, vaccinations, common cold/flu, asthma, developmental screenings
+- **Staff Physicians:**
+  - **Dr. Arjun Gupta (MBBS, DCH)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon, Wed, Fri, 10:00 AM - 6:00 PM
+    - **Accepting New Patients:** Yes, by referral only
+
+### Orthopedics
+- **Location:** Wing C, 2nd Floor
+- **Contact:** Ext. 2300
+- **Description:** Focuses on the musculoskeletal system (bones, joints, ligaments, etc.)
+- **Common Conditions Treated:** Fractures, sports injuries, joint pain (knee, hip, shoulder), arthritis, back pain
+- **Staff Physicians:**
+  - **Dr. Sameer Khan (MS - Orthopedics)**
+    - **Specialty Focus:** Joint Replacement Specialist
+    - **Languages:** English, Hindi, Urdu
+    - **Availability:** Tue, Thu, Sat, 8:00 AM - 4:00 PM
+    - **Accepting New Patients:** Yes
+
+### Neurology
+- **Location:** Wing A, 4th Floor
+- **Contact:** Ext. 4100
+- **Description:** Deals with disorders of the nervous system (brain, spinal cord, nerves)
+- **Common Conditions Treated:** Stroke, epilepsy, seizures, Parkinson's disease, migraines, multiple sclerosis
+- **Staff Physicians:**
+  - **Dr. Ananya Reddy (DM - Neurology)**
+    - **Languages:** English, Telugu, Hindi
+    - **Availability:** Mon-Thu, 11:00 AM - 7:00 PM
+    - **Accepting New Patients:** No (Accepting referrals for existing patients only)
+
+### Oncology
+- **Location:** Wing D, Ground Floor
+- **Contact:** Ext. 500
+- **Description:** Diagnosis and treatment for various types of cancer
+- **Services:** Chemotherapy, radiation therapy, immunotherapy
+- **Staff Physicians:**
+  - **Dr. Fatima Ahmed (MD, DM - Medical Oncology)**
+    - **Languages:** English, Hindi, Bengali
+    - **Availability:** By appointment only. Requires referral.
+    - **Accepting New Patients:** Yes, by referral
+
+### Dermatology
+- **Location:** Wing B, 2nd Floor
+- **Contact:** Ext. 2200
+- **Description:** Treatment of skin, hair, and nail conditions
+- **Common Conditions Treated:** Acne, eczema, psoriasis, skin cancer screening, warts, hair loss, fungal infections
+- **Staff Physicians:**
+  - **Dr. Meera Desai (MD, DVD - Dermatology)**
+    - **Specialty Focus:** Cosmetic Dermatology & Skin Cancer
+    - **Languages:** English, Hindi, Gujarati
+    - **Availability:** Mon, Wed, Fri, 9:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes
+  - **Dr. Rohit Malhotra (MBBS, MD - Dermatology)**
+    - **Specialty Focus:** Pediatric Dermatology
+    - **Languages:** English, Hindi, Punjabi
+    - **Availability:** Tue, Thu, Sat, 10:00 AM - 4:00 PM
+    - **Accepting New Patients:** Yes
+
+### General Surgery
+- **Location:** Wing C, 3rd Floor
+- **Contact:** Ext. 3300
+- **Description:** Surgical treatment for abdominal and soft tissue conditions
+- **Common Procedures:** Appendectomy, hernia repair, gallbladder removal, thyroid surgery, breast surgery
+- **Staff Physicians:**
+  - **Dr. Vikram Singh (MS - General Surgery, FICS)**
+    - **Specialty Focus:** Laparoscopic Surgery
+    - **Languages:** English, Hindi
+    - **Availability:** Mon-Fri, 7:00 AM - 3:00 PM
+    - **Accepting New Patients:** Yes, by referral
+  - **Dr. Anjali Mehta (MS - General Surgery)**
+    - **Specialty Focus:** Breast & Endocrine Surgery
+    - **Languages:** English, Hindi, Marathi
+    - **Availability:** Tue, Wed, Fri, 9:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### General Medicine (Internal Medicine)
+- **Location:** Wing A, 1st Floor
+- **Contact:** Ext. 1100
+- **Description:** Primary care and management of adult medical conditions
+- **Common Conditions Treated:** Diabetes, hypertension, respiratory infections, thyroid disorders, general health check-ups
+- **Staff Physicians:**
+  - **Dr. Rajesh Kumar (MBBS, MD - Internal Medicine)**
+    - **Languages:** English, Hindi, Tamil
+    - **Availability:** Mon-Sat, 8:00 AM - 2:00 PM
+    - **Accepting New Patients:** Yes
+  - **Dr. Kavita Joshi (MBBS, MD - Internal Medicine)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon, Wed, Thu, Fri, 2:00 PM - 8:00 PM
+    - **Accepting New Patients:** Yes
+  - **Dr. Suresh Iyer (MBBS, MD - Internal Medicine)**
+    - **Languages:** English, Hindi, Malayalam
+    - **Availability:** Tue, Thu, Sat, 9:00 AM - 3:00 PM
+    - **Accepting New Patients:** Yes
+
+### Gastroenterology
+- **Location:** Wing A, 2nd Floor
+- **Contact:** Ext. 2100
+- **Description:** Digestive system and liver disorders
+- **Common Conditions Treated:** GERD, IBS, Crohn's disease, ulcers, hepatitis, cirrhosis, colonoscopy
+- **Staff Physicians:**
+  - **Dr. Anil Verma (MD, DM - Gastroenterology)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon, Wed, Fri, 10:00 AM - 6:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### Nephrology
+- **Location:** Wing D, 1st Floor
+- **Contact:** Ext. 1400
+- **Description:** Kidney diseases and dialysis
+- **Common Conditions Treated:** Chronic kidney disease, kidney stones, dialysis management, kidney infections
+- **Staff Physicians:**
+  - **Dr. Pooja Nair (MD, DM - Nephrology)**
+    - **Languages:** English, Hindi, Malayalam
+    - **Availability:** Tue, Thu, Sat, 9:00 AM - 4:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### Obstetrics & Gynecology (OB-GYN)
+- **Location:** Wing B, 3rd Floor
+- **Contact:** Ext. 3200
+- **Description:** Women's health, pregnancy, and childbirth
+- **Common Services:** Prenatal care, delivery, gynecological exams, family planning, menopause management
+- **Staff Physicians:**
+  - **Dr. Sneha Pillai (MBBS, MS - OB-GYN)**
+    - **Languages:** English, Hindi, Malayalam
+    - **Availability:** Mon-Fri, 9:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes
+  - **Dr. Ritu Kapoor (MBBS, MS - OB-GYN)**
+    - **Specialty Focus:** High-Risk Pregnancy
+    - **Languages:** English, Hindi, Punjabi
+    - **Availability:** Mon, Wed, Thu, 10:00 AM - 6:00 PM
+    - **Accepting New Patients:** Limited availability
+
+### Ophthalmology (Eye Care)
+- **Location:** Wing C, 1st Floor
+- **Contact:** Ext. 1300
+- **Description:** Eye diseases and vision care
+- **Common Conditions Treated:** Cataracts, glaucoma, diabetic retinopathy, LASIK consultation, eye infections
+- **Staff Physicians:**
+  - **Dr. Manish Agarwal (MS - Ophthalmology)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon, Tue, Thu, Fri, 8:00 AM - 4:00 PM
+    - **Accepting New Patients:** Yes
+
+### ENT (Ear, Nose & Throat)
+- **Location:** Wing A, 2nd Floor
+- **Contact:** Ext. 2150
+- **Description:** Treatment of ear, nose, throat, and head/neck conditions
+- **Common Conditions Treated:** Sinusitis, hearing loss, tonsillitis, allergies, voice disorders, sleep apnea
+- **Staff Physicians:**
+  - **Dr. Deepak Rao (MS - ENT)**
+    - **Languages:** English, Hindi, Kannada
+    - **Availability:** Mon, Wed, Fri, 9:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes
+
+### Psychiatry & Mental Health
+- **Location:** Wing D, 2nd Floor
+- **Contact:** Ext. 2400
+- **Description:** Mental health and behavioral disorders
+- **Common Conditions Treated:** Depression, anxiety, bipolar disorder, schizophrenia, PTSD, counseling
+- **Staff Physicians:**
+  - **Dr. Shalini Gupta (MBBS, MD - Psychiatry)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon-Fri, 10:00 AM - 6:00 PM
+    - **Accepting New Patients:** Yes
+  - **Dr. Aryan Choudhury (MBBS, MD - Psychiatry)**
+    - **Specialty Focus:** Child & Adolescent Psychiatry
+    - **Languages:** English, Hindi, Bengali
+    - **Availability:** Tue, Thu, Sat, 11:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes
+
+### Pulmonology (Respiratory Medicine)
+- **Location:** Wing A, 3rd Floor
+- **Contact:** Ext. 3150
+- **Description:** Lung and respiratory system disorders
+- **Common Conditions Treated:** Asthma, COPD, pneumonia, tuberculosis, lung cancer screening, sleep disorders
+- **Staff Physicians:**
+  - **Dr. Karan Bhatia (MD, DM - Pulmonology)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon, Wed, Fri, 9:00 AM - 4:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### Endocrinology
+- **Location:** Wing B, 4th Floor
+- **Contact:** Ext. 4200
+- **Description:** Hormonal and metabolic disorders
+- **Common Conditions Treated:** Diabetes, thyroid disorders, PCOS, osteoporosis, pituitary disorders
+- **Staff Physicians:**
+  - **Dr. Nisha Patel (MD, DM - Endocrinology)**
+    - **Languages:** English, Hindi, Gujarati
+    - **Availability:** Tue, Thu, 10:00 AM - 5:00 PM
+    - **Accepting New Patients:** Yes
+
+### Urology
+- **Location:** Wing C, 3rd Floor
+- **Contact:** Ext. 3350
+- **Description:** Urinary tract and male reproductive system
+- **Common Conditions Treated:** Kidney stones, prostate issues, UTI, bladder problems, erectile dysfunction
+- **Staff Physicians:**
+  - **Dr. Abhishek Jain (MS, MCh - Urology)**
+    - **Languages:** English, Hindi
+    - **Availability:** Mon, Tue, Thu, 8:00 AM - 3:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### Rheumatology
+- **Location:** Wing D, 3rd Floor
+- **Contact:** Ext. 3400
+- **Description:** Autoimmune and joint disorders
+- **Common Conditions Treated:** Rheumatoid arthritis, lupus, gout, osteoarthritis, fibromyalgia
+- **Staff Physicians:**
+  - **Dr. Priyanka Sharma (MD, DM - Rheumatology)**
+    - **Languages:** English, Hindi
+    - **Availability:** Wed, Fri, 10:00 AM - 4:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### Physiotherapy & Rehabilitation
+- **Location:** Wing C, Ground Floor
+- **Contact:** Ext. 600
+- **Description:** Physical therapy and rehabilitation services
+- **Common Services:** Post-surgery rehab, sports injury recovery, pain management, mobility training
+- **Staff Therapists:**
+  - **Ms. Divya Rao (BPT, MPT)**
+    - **Languages:** English, Hindi, Kannada
+    - **Availability:** Mon-Sat, 8:00 AM - 6:00 PM
+    - **Accepting New Patients:** Yes, by referral
+
+### Radiology (Diagnostic Imaging)
+- **Location:** Wing C, 2nd Floor, East Wing
+- **Contact:** Ext. 2500
+- **Description:** Offers diagnostic imaging services. Note: Requires a doctor's order.
+- **Services:** X-rays, CT scans, MRI, Ultrasound, Mammography
+
+### Emergency Room (ER)
+- **Location:** Main Entrance, Ground Floor (Separate Entrance)
+- **Contact:** Ext. 911 (Internal)
+- **Hours:** 24/7 for immediate medical emergencies
+- **Staff Physicians:** Board-certified emergency medicine physicians available 24/7
+
+---
+
+## 5. Visiting Policies & Hours
+
+### General Visiting Hours
+- **General Wards:** 4:00 PM - 7:00 PM daily
+- **Intensive Care Unit (ICU):** 5:00 PM - 6:00 PM
+- **Maternity Ward:** 11:00 AM - 1:00 PM and 5:00 PM - 7:00 PM
+- **Pediatric Ward:**
+  - One parent/guardian is allowed to stay 24/7
+  - Other visitors: 4:00 PM - 6:00 PM
+
+### General Visitor Rules
+- **Limit:** Maximum two (2) visitors per patient at one time in the room
+- **Child Visitors:** Children under 12 are generally not permitted to visit patient floors for infection control reasons. Exceptions may be made by the charge nurse.
+- **Food:** Bringing outside food for patients is discouraged. Please check with the nurse first, as many patients are on restricted diets.
+- **Noise:** Please be quiet and courteous in patient hallways.
+
+### Infection Control & Safety
+- **Masks:** Masks are mandatory in all patient care areas (rooms, hallways, waiting rooms)
+- **Illness:** Visitors with symptoms of illness (fever, cough, cold) are not permitted to visit
+- **Hand Hygiene:** All visitors must wash their hands or use hand sanitizer before and after visiting a patient's room
+
+---
+
+## 6. Billing & Insurance
+
+### Billing Department
+- **Contact:** Ext. 8500 (Mon-Fri, 9:00 AM - 5:00 PM)
+
+### Payment Methods
+- Cash, credit/debit cards, and UPI payments accepted
+
+### Co-pay/Deductible
+- Determined by your insurance plan and must be paid at the time of service
+
+### Insurance Acceptance
+- Most major insurance plans accepted. A full list is available on our website.
+
+### Financial Assistance & Self-Pay
+- Financial assistance programs available for eligible patients
+- Discount available for self-pay patients who pay their bill in full at the time of service
+- Contact the Billing Department at Ext. 8500 for more information
+
+### Insurance Rejection
+- If your claim is rejected, contact the billing department for assistance. They will help you understand the reason and guide you on the next steps, which may include appealing the decision with your provider.
+
+---
+
+## 7. Patient Support & Experience
+
+### Patient Relations
+- **Purpose:** For complaints, grievances, compliments, or special needs
+- **Contact:** Ext. 8800
+- **Location:** Wing B, Ground Floor
+
+### Language & Interpreter Services
+- **Service:** Free interpreter services (in-person and video) available 24/7 for multiple languages
+- **How to Request:** Ask any staff member, or call Ext. 7000. Notify us when booking an appointment if you need an interpreter.
+
+### Accessibility & Disability Services
+- All main entrances and restrooms are wheelchair accessible
+- TTY phones available for the hearing impaired. Ask at the Information Desk.
+
+### Medical Records Request
+- **How:** Fill out an "Authorization to Release Information" form
+- **Location:** Records Department (Wing D, Ground Floor) or on our patient portal
+- **Processing Time:** 5-7 business days. A fee may apply for copying.
+
+### Second Opinions
+- Patients can request a consultation with another specialist in the hospital or ask for records to be sent to an external doctor.
+
+---
+
+## 8. Emergency Triage Guidelines
+
+### What to Expect in the ER
+Patients are seen based on the severity of their condition, not the order of arrival. A triage nurse will assess you first to determine your priority level.
+
+### Triage Levels
+- **Level 1: Emergency (Go to ER Immediately)**
+  - Chest pain or pressure
+  - Difficulty breathing or shortness of breath
+  - Severe bleeding
+  - Sudden weakness, numbness, or drooping on one side of the body
+  - Loss of consciousness
+  - Severe head injury
+  - Seizures
+- **Level 2: Urgent (Contact doctor or visit urgent care/ER)**
+  - High fever that doesn't respond to medication
+  - Sprains or strains with severe pain or inability to walk
+  - Minor cuts that are large or deep and may need stitches
+  - Persistent vomiting or diarrhea
+- **Level 3: Routine (Schedule a regular appointment)**
+  - Cold or flu symptoms (unless severe)
+  - Routine check-ups
+  - Medication refills
+  - Minor aches and pains
+
+---
+
+## 9. Common Reception FAQs (Quick Reference)
+
+### General Questions
+- **Q: Where is the nearest restroom?**
+  - **A:** In the Main Lobby, down the hall past the coffee shop. Public restrooms are also near the main elevator on each floor.
+- **Q: How do I get my lab reports?**
+  - **A:** Lab reports are available on the patient portal within 48 hours. Physical copies can be collected from the Records Department in Wing D, Ground Floor.
+- **Q: What are the cafeteria hours?**
+  - **A:** Refer to Section 2 for cafeteria hours. The coffee shop is also open, and vending machines are available 24/7.
+- **Q: How do I connect to the Wi-Fi?**
+  - **A:** Connect to the Arogya-Guest network. No password is needed.
+- **Q: Can I get a wheelchair for my relative?**
+  - **A:** Yes, wheelchairs are available at the main entrance and the ER entrance. Ask a staff member or volunteer for assistance.
+- **Q: I have a complaint about my care. Who do I talk to?**
+  - **A:** Speak with the charge nurse on the floor, or contact Patient Relations at Ext. 8800. Their office is in Wing B on the ground floor.
+- **Q: How do I find out a patient's room number?**
+  - **A:** For privacy, the patient directory can be checked. Please spell the patient's full name. (Note: Only provide info if the patient has not opted out.)
+- **Q: Where can I buy flowers or a gift?**
+  - **A:** The gift shop is located in the main lobby, near the pharmacy.
