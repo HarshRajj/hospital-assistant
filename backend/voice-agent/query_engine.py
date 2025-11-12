@@ -4,10 +4,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 import time
 
-from llama_index.core import StorageContext, load_index_from_storage, VectorStoreIndex, Settings
+from llama_index.core.indices import VectorStoreIndex
+from llama_index.core.storage.storage_context import StorageContext
+from llama_index.core import Settings, load_index_from_storage
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.llms.openai import OpenAI
 from pinecone import Pinecone
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
