@@ -12,8 +12,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
-from livekit.plugins import noise_cancellation, silero, openai
-# from livekit.plugins import deepgram
+from livekit.plugins import silero, openai
 
 # Load environment variables
 backend_dir = Path(__file__).parent.parent
@@ -78,6 +77,8 @@ else:
 async def search_hospital_knowledge(query: str) -> str:
     """Search the hospital's knowledge base for information about services, departments, doctors, hours, policies, and facilities.
     
+    Use this function for ANY question about the hospital. Do not answer hospital questions without calling this function.
+    
     Args:
         query: The question or topic to search for in the hospital knowledge base.
     """
@@ -85,22 +86,32 @@ async def search_hospital_knowledge(query: str) -> str:
         return "Knowledge base is not available. Please contact the information desk."
     
     try:
-        start_time = time.time()
-        print(f"🔍 Searching knowledge base for: '{query}'")
+        total_start = time.time()
+        print(f"\n{'='*60}")
+        print(f"🔍 RAG FUNCTION CALLED!")
+        print(f"� Query: '{query}'")
+        print(f"{'='*60}")
         
-        # OPTIMIZATION 1: Reduce to top 1 result for faster response
-        # OPTIMIZATION 2: Use compact mode for minimal processing
-        # OPTIMIZATION 3: Disable LLM synthesis - return raw context only
+        # STEP 1: Create query engine (should be instant - using cached index)
+        engine_start = time.time()
         query_engine = index.as_query_engine(
-            similarity_top_k=1,  # Reduced from 2 to 1 (50% faster)
-            response_mode="compact",  # Fast mode
+            similarity_top_k=3,  # Balance between speed and accuracy
+            response_mode="compact",  # Fastest mode - single LLM call
             streaming=False  # Disabled for function tools
         )
+        engine_time = time.time() - engine_start
+        print(f"⚡ Query engine created: {engine_time*1000:.0f}ms")
         
+        # STEP 2: Execute RAG query (main bottleneck)
+        query_start = time.time()
         response = await query_engine.aquery(query)
+        query_time = time.time() - query_start
+        print(f"⚡ RAG query executed: {query_time*1000:.0f}ms")
         
-        elapsed = time.time() - start_time
-        print(f"✅ Found answer in {elapsed:.2f}s ({len(str(response))} chars)")
+        total_time = time.time() - total_start
+        print(f"✅ TOTAL RAG TIME: {total_time*1000:.0f}ms ({len(str(response))} chars)")
+        print(f"� Answer: {str(response)[:150]}...")
+        print(f"{'='*60}\n")
         
         return str(response)
     except Exception as e:
@@ -113,29 +124,32 @@ async def entrypoint(ctx: JobContext):
 
     agent = Agent(
         instructions=(
-            "You are a helpful voice assistant for Arogya Med-City Hospital. "
-            "You assist patients, visitors, and staff with hospital information, appointments, and services. "
-            "Your responses should be concise, friendly, and conversational for voice interaction. "
-            "Avoid complex formatting, symbols, asterisks, or unpronounceable punctuation. "
+            "You are a voice assistant for Arogya Med-City Hospital. "
             "\n\n"
-            "IMPORTANT: You have access to the hospital's official knowledge base through the 'search_hospital_knowledge' function. "
-            "ALWAYS use this function when users ask about:\n"
-            "- Hospital departments, services, locations, or facilities\n"
-            "- Doctor information, availability, or specialties\n"
-            "- Visiting hours, parking, or amenities\n"
-            "- Appointment booking procedures or policies\n"
-            "- Operating hours for any hospital service\n"
-            "- Contact information, extensions, or phone numbers\n"
-            "- Emergency procedures or triage information\n"
+            "CRITICAL RULES:\n"
+            "1. You do NOT have any knowledge about this hospital in your training data\n"
+            "2. You MUST call the search_hospital_knowledge function for EVERY question\n"
+            "3. NEVER make up or guess any hospital information\n"
+            "4. If you don't call the function, you're giving WRONG information\n"
             "\n"
-            "Do NOT make up information about the hospital. Always use the search function to get accurate, official information. "
-            "Present the information naturally and conversationally."
+            "For ANY question about the hospital, you MUST:\n"
+            "Step 1: Call search_hospital_knowledge with the user's question\n"
+            "Step 2: Wait for the result\n"
+            "Step 3: Speak the answer naturally and BRIEFLY (1-2 sentences max)\n"
+            "\n"
+            "Questions that REQUIRE the function (no exceptions):\n"
+            "- Departments, doctors, services, locations\n"
+            "- Hours (cafeteria, visiting, operating)\n"
+            "- Contact info, phone numbers, extensions\n"
+            "- Facilities, parking, amenities\n"
+            "- Policies, procedures, appointments\n"
+            "\n"
+            "IMPORTANT: Keep responses VERY SHORT and conversational. No lists, no asterisks, no special formatting."
         ),
         vad=silero.VAD.load(),
-        stt="assemblyai/universal-streaming:en",
-        # llm="cerebras/llama3.1-8b",
-        llm=openai.LLM.with_cerebras(model="llama3.1-8b",),
-        tts="cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc",
+        stt="deepgram",  # Deepgram for fast STT
+        llm=openai.LLM(model="gpt-4o-mini"),  # GPT-4o-mini has BEST function calling support
+        tts="cartesia",  # Cartesia for fast TTS
         tools=[search_hospital_knowledge],
     )
 
