@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
 
-const BACKEND_URL = "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export default function VoiceAssistant() {
   const [isConnected, setIsConnected] = useState(false);

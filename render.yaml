@@ -1,0 +1,44 @@
+services:
+  # FastAPI Backend API
+  - type: web
+    name: hospital-assistant-api
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd backend && pip install uv && uv sync
+    startCommand: cd backend && uv run uvicorn api.server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    
+  # LiveKit Voice Agent (Worker)
+  - type: worker
+    name: hospital-voice-agent
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd backend && pip install uv && uv sync && uv run scripts/upload_embeddings.py --storage local
+    startCommand: cd backend && uv run voice-agent/query_engine.py start
+    envVars:
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
