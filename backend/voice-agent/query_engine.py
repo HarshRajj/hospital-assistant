@@ -9,6 +9,7 @@ from llama_index.core.storage.storage_context import StorageContext
 from llama_index.core import Settings, load_index_from_storage
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.gemini import GeminiEmbedding
 from pinecone import Pinecone
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
@@ -25,9 +26,22 @@ Settings.chunk_overlap = 20  # Minimal overlap for speed
 
 # Configuration
 STORAGE_TYPE = os.getenv("RAG_STORAGE_TYPE", "local")
+EMBEDDING_PROVIDER = os.getenv("RAG_EMBEDDING_PROVIDER", "gemini")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "hospital-assistant")
-EMBEDDING_MODEL = os.getenv("RAG_EMBEDDING_MODEL", "text-embedding-3-small")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+GEMINI_MODEL = os.getenv("RAG_GEMINI_EMBEDDING_MODEL", "models/embedding-001")
+
+# Set up embedding model based on provider
+if EMBEDDING_PROVIDER == "gemini":
+    print(f"🆓 Using FREE Gemini embeddings: {GEMINI_MODEL}")
+    Settings.embed_model = GeminiEmbedding(
+        model_name=GEMINI_MODEL,
+        api_key=GOOGLE_API_KEY
+    )
+else:
+    print(f"Using OpenAI embeddings")
+    Settings.embed_model = OpenAIEmbedding()
 
 # Load the existing hospital knowledge base index based on storage type
 print(f"🔧 Loading hospital knowledge base from {STORAGE_TYPE} storage...")
@@ -46,13 +60,9 @@ if STORAGE_TYPE == "pinecone":
             # Create vector store
             vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
             
-            # Create embedding model
-            embed_model = OpenAIEmbedding(model=EMBEDDING_MODEL)
-            
-            # Create index from vector store
+            # Create index from vector store (uses the global embed_model from Settings)
             index = VectorStoreIndex.from_vector_store(
-                vector_store=vector_store,
-                embed_model=embed_model
+                vector_store=vector_store
             )
             print(f"✅ Hospital knowledge base loaded from Pinecone ({PINECONE_INDEX_NAME})!")
         except Exception as e:
