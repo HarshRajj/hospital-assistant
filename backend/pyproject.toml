@@ -5,12 +5,15 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "livekit-agents[openai,silero,turn-detector]~=1.2",
+    "livekit-agents[openai,silero,turn-detector,google,groq]~=1.2",
     "livekit-plugins-noise-cancellation~=0.2",
+    "livekit-plugins-google>=1.2.18",
+    "livekit-plugins-groq>=0.1.0",
     "python-dotenv>=1.2.1",
     "llama-index>=0.11.0",
     "llama-index-embeddings-openai>=0.2.0",
     "llama-index-embeddings-together>=0.2.0",
+    "llama-index-embeddings-gemini>=0.2.0",
     "llama-index-llms-groq>=0.2.0",
     "llama-index-vector-stores-pinecone>=0.2.0",
     "pinecone>=5.0.0",
@@ -19,4 +22,5 @@ dependencies = [
     "uvicorn>=0.24.0",
     "livekit>=0.11.0",
     "groq>=0.4.0",
+    "google-generativeai>=0.3.0",
 ]

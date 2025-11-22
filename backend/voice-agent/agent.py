@@ -1,170 +1,93 @@
-import os
+"""Voice agent with RAG-powered hospital knowledge retrieval."""
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
 
-from livekit import agents
-from livekit.agents import AgentSession, Agent, RoomInputOptions
-from livekit.plugins import noise_cancellation, silero
-
-# Add backend directory to path for importing RAG modules
-sys.path.append(str(Path(__file__).parent.parent))
-
-from rag import EmbeddingManager, VectorStoreManager, RAGRetriever
-
-# Load environment variables from backend/.env (single source of truth)
+# Add backend directory to path for imports
 backend_dir = Path(__file__).parent.parent
-env_path = backend_dir / ".env"
-load_dotenv(env_path)
+sys.path.insert(0, str(backend_dir))
+
+from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
+from livekit.plugins import silero, groq
+
+from services.rag_service import rag_service
+from config import settings
 
 
-class Assistant(Agent):
-    def __init__(self, rag_retriever=None) -> None:
-        """
-        Initialize the Assistant with optional RAG retriever.
-        
-        Args:
-            rag_retriever: RAGRetriever instance for knowledge base queries
-        """
-        # Base instructions for the agent
-        base_instructions = """You are a helpful voice AI assistant for Arogya Med-City Hospital.
-You assist patients, visitors, and staff with hospital information, appointments, directions, and services.
-Your responses are concise, accurate, and friendly - perfect for voice interaction.
-Avoid complex formatting, emojis, asterisks, or symbols in your responses.
-
-IMPORTANT: You have access to the hospital's knowledge base. When answering questions about:
-- Hospital services, departments, or facilities
-- Doctor information and availability
-- Visiting hours, parking, or amenities
-- Appointment booking or policies
-- Any hospital-specific information
-
-You MUST use the provided context from the knowledge base to give accurate, specific answers.
-Do not make up information. If the context doesn't contain the answer, politely say so and offer to connect them with the appropriate department."""
-
-        super().__init__(instructions=base_instructions)
-        self.rag_retriever = rag_retriever
+@llm.function_tool
+async def search_hospital_knowledge(query: str) -> str:
+    """Search the hospital's knowledge base for information about services, departments, doctors, hours, policies, and facilities.
     
-    def get_context(self, query: str) -> str:
-        """
-        Retrieve context from RAG pipeline for a given query.
-        
-        Args:
-            query: User's question
-            
-        Returns:
-            Retrieved context or empty string
-        """
-        if not self.rag_retriever:
-            return ""
-        
-        try:
-            print(f"🔍 Retrieving context for: '{query}'")
-            context = self.rag_retriever.get_context(query)
-            
-            if context:
-                print(f"✅ Retrieved context ({len(context)} chars)")
-                return context
-            else:
-                print("⚠️  No relevant context found")
-                return ""
-                
-        except Exception as e:
-            print(f"❌ Error retrieving context: {e}")
-            return ""
-
-
-
-async def entrypoint(ctx: agents.JobContext):
+    Use this function for ANY question about the hospital. Do not answer hospital questions without calling this function.
+    
+    Args:
+        query: The question or topic to search for in the hospital knowledge base.
     """
-    Main entrypoint for the voice agent with RAG integration.
-    """
-    # Initialize RAG pipeline
-    rag_retriever = None
-    storage_type = os.getenv("RAG_STORAGE_TYPE", "local")  # "local" or "pinecone"
-    
-    try:
-        print(f"🔧 Initializing RAG pipeline with {storage_type} storage...")
-        
-        # Initialize embedding manager
-        embed_manager = EmbeddingManager(model="text-embedding-3-small")
-        embed_model = embed_manager.get_embed_model()
-        
-        # Load vector store
-        if storage_type == "pinecone":
-            vector_store = VectorStoreManager(
-                embed_model=embed_model,
-                storage_type="pinecone",
-                index_name="hospital-assistant"
-            )
-        else:
-            vector_store = VectorStoreManager(
-                embed_model=embed_model,
-                storage_type="local",
-                persist_dir=str(backend_dir / "storage" / "local_index")
-            )
-        
-        # Load existing index
-        index = vector_store.load_index()
-        
-        if index:
-            # Create retriever with optimized settings for voice
-            rag_retriever = RAGRetriever(
-                index=index,
-                similarity_top_k=2,  # Keep minimal for fast response
-                response_mode="compact"
-            )
-            print("✅ RAG pipeline initialized successfully!")
-        else:
-            print("⚠️  No existing index found. Run upload_embeddings.py first.")
-            print("   Agent will run without RAG support.")
-    
-    except Exception as e:
-        print(f"⚠️  Error initializing RAG pipeline: {e}")
-        print("   Agent will run without RAG support.")
-    
-    # Create assistant instance
-    assistant = Assistant(rag_retriever=rag_retriever)
-    
-    # Create agent session
-    session = AgentSession(
-        stt="assemblyai/universal-streaming:en",
-        llm="openai/gpt-4.1-mini",
-        tts="cartesia/sonic-3:9626c31c-bec5-4cca-baa8-f8ba9e84c8bc",
-        vad=silero.VAD.load(),
-    )
+    return await rag_service.search(query)
 
-    # Set up RAG context injection using session events
-    @session.on("user_speech_committed")
-    def on_user_speech(msg: agents.llm.ChatMessage):
-        """Inject RAG context when user speaks."""
-        if assistant.rag_retriever and msg.content:
-            context = assistant.get_context(msg.content)
-            if context:
-                # Add context as a system message
-                context_msg = agents.llm.ChatMessage(
-                    role="system",
-                    content=f"""[HOSPITAL KNOWLEDGE BASE CONTEXT]
-{context}
-[END OF CONTEXT]
 
-Use the above context to answer the user's question accurately."""
-                )
-                session.chat_ctx.messages.append(context_msg)
+async def entrypoint(ctx: JobContext):
+    """Voice agent entrypoint - connects to room and starts the agent."""
+    await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    await session.start(
-        room=ctx.room,
-        agent=assistant,
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(), 
+    agent = Agent(
+        instructions=(
+            """
+                You are the compassionate, intelligent Voice Assistant for Arogya Med-City Hospital.
+
+                ### PHASE 1: CONTEXT & INTENT ANALYSIS (Internal Process)
+                Before generating a response, instantly evaluate the user's input for:
+                1. **User Identity:** Are they a patient (anxious/in pain), a visitor (confused/lost), or staff?
+                2. **Urgency Level:** Is this a medical emergency, a time-sensitive appointment, or a general inquiry?
+                3. **Emotional State:** Are they frustrated, scared, or casual?
+
+                ### PHASE 2: ADAPTIVE BEHAVIOR RULES
+                * **If Emergency/Pain:** Tone must be calm, urgent, and reassuring. Prioritize safety instructions immediately.
+                * **If Frustrated/Confused:** Tone must be apologetic and patient. Focus on solving the problem immediately.
+                * **If Casual Inquiry:** Tone should be warm, bright, and welcoming.
+
+                ### PHASE 3: KNOWLEDGE RETRIEVAL (CRITICAL)
+                1.  You do NOT have internal knowledge of Arogya Med-City Hospital.
+                2.  You **MUST** call the function `search_hospital_knowledge` for EVERY question regarding hospital data (doctors, timings, locations, policies).
+                3.  **NEVER** guess or hallucinate facts. If you don't check the database, you are failing the user.
+
+                ### PHASE 4: VOICE OUTPUT CONSTRAINTS
+                * **Step 1:** Call `search_hospital_knowledge` with the specific query.
+                * **Step 2:** Synthesize the returned data into a spoken response.
+                * **Length:** Maximum 2 sentences. Keep it punchy.
+                * **Style:** Natural, conversational English. Avoid robotic phrasing.
+                * **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters. (This text goes directly to a Text-to-Speech engine).
+
+                ### EXAMPLE INTERACTIONS
+                * *User (Panicked):* "My father is having chest pain, where do I go?"
+                    * *Your thought:* Emergency context.
+                    * *Action:* Call tool -> Get Emergency Ward location.
+                    * *Response:* "Please head immediately to the Emergency Department on the Ground Floor, Gate 4. I am alerting the staff there."
+
+                * *User (Casual):* "Can I get a coffee here?"
+                    * *Your thought:* Visitor comfort context.
+                    * *Action:* Call tool -> Get Cafeteria info.
+                    * *Response:* "Yes, the cafeteria is open 24/7 on the first floor near the main lobby."
+                """
         ),
+        vad=silero.VAD.load(),
+        stt="deepgram",  # Deepgram for fast STT
+        llm=groq.LLM(
+            model="gpt-oss-120b",
+            api_key=settings.CEREBRAS_API_KEY,
+            base_url="https://api.cerebras.ai/v1"
+        ),  # FREE Cerebras (ultra-fast inference)
+        tts="cartesia",  # Cartesia for fast TTS
+        tools=[search_hospital_knowledge],
     )
 
-    await session.generate_reply(
-        instructions="Greet the user warmly as a hospital receptionist and offer your assistance."
-    )
+    session = AgentSession()
+    await session.start(agent=agent, room=ctx.room)
 
+    await session.say(
+        "Hello! Welcome to Arogya Med-City Hospital. How can I help you today?", 
+        allow_interruptions=True
+    )
 
 
 if __name__ == "__main__":
-    agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
