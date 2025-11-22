@@ -9,8 +9,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-600/20">
-                🏥
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-600/20">
+                A
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 tracking-tight">Arogya Med-City</h1>
@@ -51,15 +51,13 @@ export default function Home() {
         {/* AI Assistants Grid */}
         <section className="grid lg:grid-cols-2 gap-8 items-start">
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">🎤</span>
+            <div className="mb-2">
               <h3 className="text-xl font-bold text-gray-900">Voice Assistant</h3>
             </div>
             <VoiceAssistant />
           </div>
           <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">💬</span>
+            <div className="mb-2">
               <h3 className="text-xl font-bold text-gray-900">Chat Support</h3>
             </div>
             <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden">
@@ -82,37 +80,37 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-6">
             <DepartmentCard
-              icon="❤️"
+              icon="C"
               title="Cardiology"
               description="Expert heart care with advanced diagnostics and treatment"
               floor="2nd Floor, East Wing"
             />
             <DepartmentCard
-              icon="👶"
+              icon="P"
               title="Pediatrics"
               description="Specialized care for infants, children, and adolescents"
               floor="3rd Floor, West Wing"
             />
             <DepartmentCard
-              icon="🦴"
+              icon="O"
               title="Orthopedics"
               description="Comprehensive bone and joint treatment services"
               floor="1st Floor, North Wing"
             />
             <DepartmentCard
-              icon="🧠"
+              icon="N"
               title="Neurology"
               description="Advanced neurological care and treatment"
               floor="4th Floor, East Wing"
             />
             <DepartmentCard
-              icon="🔬"
+              icon="O"
               title="Oncology"
               description="State-of-the-art cancer diagnosis and treatment"
               floor="5th Floor, South Wing"
             />
             <DepartmentCard
-              icon="👁️"
+              icon="E"
               title="Ophthalmology"
               description="Complete eye care and vision correction services"
               floor="2nd Floor, West Wing"
@@ -123,17 +121,17 @@ export default function Home() {
         {/* Quick Info */}
         <section className="grid md:grid-cols-3 gap-6">
           <InfoCard
-            icon="🕒"
+            icon="H"
             title="Visiting Hours"
             info={["General Ward: 4 PM - 7 PM", "ICU: 11 AM - 12 PM, 5 PM - 6 PM"]}
           />
           <InfoCard
-            icon="🍽️"
+            icon="C"
             title="Cafeteria"
             info={["Breakfast: 6:30 AM - 9:30 AM", "Lunch: 12:00 PM - 3:00 PM", "Dinner: 6:00 PM - 9:00 PM"]}
           />
           <InfoCard
-            icon="🏥"
+            icon="F"
             title="Facilities"
             info={["Free Parking Available", "24/7 Emergency Services", "Ambulance Services"]}
           />
@@ -146,8 +144,8 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-lg">
-                  🏥
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                  A
                 </div>
                 <span className="text-xl font-bold text-gray-900">Arogya Med-City</span>
               </div>
@@ -186,13 +184,13 @@ export default function Home() {
 function DepartmentCard({ icon, title, description, floor }: { icon: string; title: string; description: string; floor: string }) {
   return (
     <div className="group bg-white rounded-2xl p-6 border border-gray-100 card-hover cursor-pointer">
-      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-lg font-bold text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
         {icon}
       </div>
       <h4 className="text-xl font-bold text-gray-900 mb-2">{title}</h4>
       <p className="text-gray-500 text-sm mb-4 leading-relaxed">{description}</p>
-      <div className="flex items-center gap-2 text-xs font-medium text-blue-600 bg-blue-50 w-fit px-3 py-1.5 rounded-full">
-        <span>📍</span>
+      <div className="flex items-center gap-2 text-xs font-medium text-gray-600 w-fit">
+        <span className="w-1 h-1 bg-blue-500 rounded-full"></span>
         {floor}
       </div>
     </div>
@@ -203,7 +201,7 @@ function InfoCard({ icon, title, info }: { icon: string; title: string; info: st
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-xl">
+        <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
           {icon}
         </div>
         <h4 className="text-lg font-bold text-gray-900">{title}</h4>
