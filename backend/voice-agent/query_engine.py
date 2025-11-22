@@ -13,7 +13,7 @@ from llama_index.embeddings.gemini import GeminiEmbedding
 from pinecone import Pinecone
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
-from livekit.plugins import silero, openai
+from livekit.plugins import silero, openai, google
 
 # Load environment variables
 backend_dir = Path(__file__).parent.parent
@@ -174,7 +174,7 @@ async def entrypoint(ctx: JobContext):
         ),
         vad=silero.VAD.load(),
         stt="deepgram",  # Deepgram for fast STT
-        llm=openai.LLM(model="gpt-4o-mini"),  # GPT-4o-mini has BEST function calling support
+        llm=google.LLM(model="gemini-2.0-flash-exp"),  # FREE Gemini 2.0 Flash with function calling
         tts="cartesia",  # Cartesia for fast TTS
         tools=[search_hospital_knowledge],
     )

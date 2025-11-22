@@ -246,7 +246,9 @@ dependencies = [
     { name = "google-generativeai" },
     { name = "groq" },
     { name = "livekit" },
-    { name = "livekit-agents", extra = ["openai", "silero", "turn-detector"] },
+    { name = "livekit-agents", extra = ["google", "groq", "openai", "silero", "turn-detector"] },
+    { name = "livekit-plugins-google" },
+    { name = "livekit-plugins-groq" },
     { name = "livekit-plugins-noise-cancellation" },
     { name = "llama-index" },
     { name = "llama-index-embeddings-gemini" },
@@ -266,7 +268,9 @@ requires-dist = [
     { name = "google-generativeai", specifier = ">=0.3.0" },
     { name = "groq", specifier = ">=0.4.0" },
     { name = "livekit", specifier = ">=0.11.0" },
-    { name = "livekit-agents", extras = ["openai", "silero", "turn-detector"], specifier = "~=1.2" },
+    { name = "livekit-agents", extras = ["openai", "silero", "turn-detector", "google", "groq"], specifier = "~=1.2" },
+    { name = "livekit-plugins-google", specifier = ">=1.2.18" },
+    { name = "livekit-plugins-groq", specifier = ">=0.1.0" },
     { name = "livekit-plugins-noise-cancellation", specifier = "~=0.2" },
     { name = "llama-index", specifier = ">=0.11.0" },
     { name = "llama-index-embeddings-gemini", specifier = ">=0.2.0" },
@@ -842,6 +846,59 @@ wheels = [
 ]
 
 [[package]]
+name = "google-cloud-speech"
+version = "2.34.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", version = "2.25.2", source = { registry = "https://pypi.org/simple" }, extra = ["grpc"], marker = "python_full_version >= '3.14'" },
+    { name = "google-api-core", version = "2.28.1", source = { registry = "https://pypi.org/simple" }, extra = ["grpc"], marker = "python_full_version < '3.14'" },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b7/c2/500c58a7e3008cb77da01a2f2a8284ac55c808545d18551c62a031ff548d/google_cloud_speech-2.34.0.tar.gz", hash = "sha256:2a7bffd84f134b9b70c9f11cbb5088c534f92be149d71d9073d0b9dd3a431acf", size = 391496, upload-time = "2025-10-20T14:57:17.127Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/78/4c/8c52951a4078f4b181917c37a2610e69c0b24a10567d0182bf089a933c35/google_cloud_speech-2.34.0-py3-none-any.whl", hash = "sha256:cc0c6c0fda9306fee01c998bc207b68f71e0a3247121a5a3a27daabacd3a8c98", size = 336614, upload-time = "2025-10-20T14:54:05.004Z" },
+]
+
+[[package]]
+name = "google-cloud-texttospeech"
+version = "2.33.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", version = "2.25.2", source = { registry = "https://pypi.org/simple" }, extra = ["grpc"], marker = "python_full_version >= '3.14'" },
+    { name = "google-api-core", version = "2.28.1", source = { registry = "https://pypi.org/simple" }, extra = ["grpc"], marker = "python_full_version < '3.14'" },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e9/b0/326f73a5499f06dacb8a847a78020ebe7c89e0f81896d5cee9093b2d5367/google_cloud_texttospeech-2.33.0.tar.gz", hash = "sha256:311157b74210cc4777f148ab6a62bc2cc24b3f52a7dc106c0a0223c1830b618f", size = 185291, upload-time = "2025-10-23T16:28:55.507Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/c6/59abc67822cbb2bd48b769c085531fffaf0d0d87420216207dc6cadd961c/google_cloud_texttospeech-2.33.0-py3-none-any.whl", hash = "sha256:a97273fc0e32972f8d262a9cb4a134eb9f1300518cae3612ff80053a5eef1f44", size = 192172, upload-time = "2025-10-23T16:28:46.891Z" },
+]
+
+[[package]]
+name = "google-genai"
+version = "1.52.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "google-auth" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "requests" },
+    { name = "tenacity" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/4e/0ad8585d05312074bb69711b2d81cfed69ce0ae441913d57bf169bed20a7/google_genai-1.52.0.tar.gz", hash = "sha256:a74e8a4b3025f23aa98d6a0f84783119012ca6c336fd68f73c5d2b11465d7fc5", size = 258743, upload-time = "2025-11-21T02:18:55.742Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/66/03f663e7bca7abe9ccfebe6cb3fe7da9a118fd723a5abb278d6117e7990e/google_genai-1.52.0-py3-none-any.whl", hash = "sha256:c8352b9f065ae14b9322b949c7debab8562982f03bf71d44130cd2b798c20743", size = 261219, upload-time = "2025-11-21T02:18:54.515Z" },
+]
+
+[[package]]
 name = "google-generativeai"
 version = "0.8.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1313,6 +1370,12 @@ codecs = [
     { name = "av" },
     { name = "numpy" },
 ]
+google = [
+    { name = "livekit-plugins-google" },
+]
+groq = [
+    { name = "livekit-plugins-groq" },
+]
 images = [
     { name = "pillow" },
 ]
@@ -1362,6 +1425,36 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/71/e2/3c1671f7ed50db09813f6f06581b3acc93935f88352f96ce141b93e1f098/livekit_blingfire-1.0.0-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3c8d3a92a34925063ac05e70f6d4eebfeb9f9e29816868dece7159688b68cefe", size = 158534, upload-time = "2025-06-30T14:56:23.616Z" },
     { url = "https://files.pythonhosted.org/packages/14/e6/9f21edfdc7284d89e3f6a61db662e5b4eda45a7657628dd55308164386c0/livekit_blingfire-1.0.0-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:212ffef06b2e832758afcd1d19c709068207ad71f2fb5b426b6bb8e2773e9673", size = 167224, upload-time = "2025-06-30T14:56:24.811Z" },
     { url = "https://files.pythonhosted.org/packages/1f/d0/307cc89438888067a17a0c33329d59867516a616aab7618dcb43987165ea/livekit_blingfire-1.0.0-cp313-cp313-win_amd64.whl", hash = "sha256:f3f4df6a51171a88c6863cea01c607661d6d6bc0398976a37ba0e4b3e3283433", size = 125486, upload-time = "2025-06-30T14:56:26.1Z" },
+]
+
+[[package]]
+name = "livekit-plugins-google"
+version = "1.2.18"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-auth" },
+    { name = "google-cloud-speech" },
+    { name = "google-cloud-texttospeech" },
+    { name = "google-genai" },
+    { name = "livekit-agents" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f7/eb/1c18480819088b4cf76839898103fa5148cf9e852e36476653e57b1b7257/livekit_plugins_google-1.2.18.tar.gz", hash = "sha256:3fbbf2ec7a165532a1a6c60c946a9f4ff5729e984b8295eec4aa050081365c47", size = 31713, upload-time = "2025-11-05T19:33:02.645Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/2c/eef0b32965a293796237bab53e7fc2b738a55c3c50db7157999c20c1ffd3/livekit_plugins_google-1.2.18-py3-none-any.whl", hash = "sha256:aebf754ca0872049cb44f85d904e13e96a602751a441b5b136e8b8a61d9a07f8", size = 38999, upload-time = "2025-11-05T19:33:01.144Z" },
+]
+
+[[package]]
+name = "livekit-plugins-groq"
+version = "1.2.18"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "livekit" },
+    { name = "livekit-agents", extra = ["codecs", "openai"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7e/74/d9279513080166bf3769efa11eeddd76cc175b3890f100b2d7b2690100a0/livekit_plugins_groq-1.2.18.tar.gz", hash = "sha256:d38a3e2b4b1760935900cd66a94380e99c6ce129d53743795bf8a5ce06668c1c", size = 6200, upload-time = "2025-11-05T19:33:04.073Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/4a/79c30ee986dc2db911913bbe68281240766f95224d59950366bdcadc43a7/livekit_plugins_groq-1.2.18-py3-none-any.whl", hash = "sha256:90e2ebf9369111a4c69a6969a90077be8faa8d64b443c4babbddd91d992b76bb", size = 7412, upload-time = "2025-11-05T19:33:03.3Z" },
 ]
 
 [[package]]
