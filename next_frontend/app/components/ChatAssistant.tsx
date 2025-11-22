@@ -157,7 +157,7 @@ export default function ChatAssistant() {
             onKeyPress={handleKeyPress}
             placeholder="Type your question..."
             disabled={isLoading}
-            className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all placeholder:text-gray-400 text-sm"
+            className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400 transition-all placeholder:text-gray-400 text-sm text-gray-900"
           />
           <button
             onClick={sendMessage}
