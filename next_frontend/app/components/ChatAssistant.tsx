@@ -55,7 +55,10 @@ export default function ChatAssistant() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ 
+          message: input,
+          conversation_history: messages.slice(1).map(m => ({ role: m.role, content: m.content }))
+        }),
       });
 
       if (!response.ok) {
@@ -66,7 +69,7 @@ export default function ChatAssistant() {
 
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.answer,
+        content: data.response,
         timestamp: new Date(),
       };
 

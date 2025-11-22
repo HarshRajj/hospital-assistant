@@ -1,6 +1,8 @@
 """FastAPI server for hospital voice assistant."""
 import sys
 from pathlib import Path
+from typing import List, Optional
+from pydantic import BaseModel
 
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent.parent
@@ -11,6 +13,24 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from services.token_service import token_service
+from services.chat_service import chat_service
+
+
+# Request/Response models
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_history: Optional[List[ChatMessage]] = None
+
+
+class ChatResponse(BaseModel):
+    response: str
+    context_used: bool
+    model: str
 
 
 app = FastAPI(title="Hospital Voice Assistant API")
@@ -60,6 +80,37 @@ async def connect():
         return connection
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """Text-based chat endpoint with RAG support.
+    
+    This endpoint uses Cerebras LLM with hospital knowledge base for fast responses.
+    
+    Args:
+        request: ChatRequest containing user message and optional conversation history
+        
+    Returns:
+        ChatResponse with assistant's reply, context usage, and model info
+        
+    Raises:
+        HTTPException: If chat service fails
+    """
+    try:
+        # Convert Pydantic models to dicts for chat service
+        history = None
+        if request.conversation_history:
+            history = [{"role": msg.role, "content": msg.content} for msg in request.conversation_history]
+        
+        result = await chat_service.chat(
+            message=request.message,
+            conversation_history=history
+        )
+        
+        return ChatResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")
 
 
 if __name__ == "__main__":
