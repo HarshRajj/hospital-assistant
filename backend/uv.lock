@@ -246,7 +246,7 @@ dependencies = [
     { name = "google-generativeai" },
     { name = "groq" },
     { name = "livekit" },
-    { name = "livekit-agents", extra = ["google", "groq", "openai", "silero", "turn-detector"] },
+    { name = "livekit-agents", extra = ["cartesia", "google", "groq", "openai", "silero", "turn-detector"] },
     { name = "livekit-plugins-google" },
     { name = "livekit-plugins-groq" },
     { name = "livekit-plugins-noise-cancellation" },
@@ -267,8 +267,8 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.104.0" },
     { name = "google-generativeai", specifier = ">=0.3.0" },
     { name = "groq", specifier = ">=0.4.0" },
-    { name = "livekit", specifier = ">=0.11.0" },
-    { name = "livekit-agents", extras = ["openai", "silero", "turn-detector", "google", "groq"], specifier = "~=1.2" },
+    { name = "livekit", specifier = ">=1.0.0,<2.0.0" },
+    { name = "livekit-agents", extras = ["openai", "silero", "turn-detector", "google", "groq", "cartesia"], specifier = "~=1.2" },
     { name = "livekit-plugins-google", specifier = ">=1.2.18" },
     { name = "livekit-plugins-groq", specifier = ">=0.1.0" },
     { name = "livekit-plugins-noise-cancellation", specifier = "~=0.2" },
@@ -1366,6 +1366,9 @@ wheels = [
 ]
 
 [package.optional-dependencies]
+cartesia = [
+    { name = "livekit-plugins-cartesia" },
+]
 codecs = [
     { name = "av" },
     { name = "numpy" },
@@ -1425,6 +1428,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/71/e2/3c1671f7ed50db09813f6f06581b3acc93935f88352f96ce141b93e1f098/livekit_blingfire-1.0.0-cp313-cp313-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3c8d3a92a34925063ac05e70f6d4eebfeb9f9e29816868dece7159688b68cefe", size = 158534, upload-time = "2025-06-30T14:56:23.616Z" },
     { url = "https://files.pythonhosted.org/packages/14/e6/9f21edfdc7284d89e3f6a61db662e5b4eda45a7657628dd55308164386c0/livekit_blingfire-1.0.0-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:212ffef06b2e832758afcd1d19c709068207ad71f2fb5b426b6bb8e2773e9673", size = 167224, upload-time = "2025-06-30T14:56:24.811Z" },
     { url = "https://files.pythonhosted.org/packages/1f/d0/307cc89438888067a17a0c33329d59867516a616aab7618dcb43987165ea/livekit_blingfire-1.0.0-cp313-cp313-win_amd64.whl", hash = "sha256:f3f4df6a51171a88c6863cea01c607661d6d6bc0398976a37ba0e4b3e3283433", size = 125486, upload-time = "2025-06-30T14:56:26.1Z" },
+]
+
+[[package]]
+name = "livekit-plugins-cartesia"
+version = "1.2.18"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "livekit-agents" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8f/a1/7b07dd20ed560a67d8e9f1752d217fa9e9f79571290a62caef42b3dfc4fd/livekit_plugins_cartesia-1.2.18.tar.gz", hash = "sha256:705a3ee9ceedec4589b6e8a8d706f45b8596d57b75f17bc5ab15bda5730848b1", size = 11553, upload-time = "2025-11-05T19:32:49.169Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/98/a30a0925980c1ea39848cdf088ebf2a3b9142cbad460a0f82d2cf81034cf/livekit_plugins_cartesia-1.2.18-py3-none-any.whl", hash = "sha256:c629d7be736e5a5846362905bdf0c1c98d0f692b36e026847eb236a151185cb0", size = 14098, upload-time = "2025-11-05T19:32:48.248Z" },
 ]
 
 [[package]]

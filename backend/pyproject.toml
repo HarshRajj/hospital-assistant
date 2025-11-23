@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "livekit-agents[openai,silero,turn-detector,google,groq]~=1.2",
+    "livekit-agents[openai,silero,turn-detector,google,groq,cartesia]~=1.2",
     "livekit-plugins-noise-cancellation~=0.2",
     "livekit-plugins-google>=1.2.18",
     "livekit-plugins-groq>=0.1.0",
@@ -20,7 +20,7 @@ dependencies = [
     "openai>=1.0.0",
     "fastapi>=0.104.0",
     "uvicorn>=0.24.0",
-    "livekit>=0.11.0",
+    "livekit>=1.0.0,<2.0.0",
     "groq>=0.4.0",
     "google-generativeai>=0.3.0",
 ]
