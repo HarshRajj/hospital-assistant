@@ -7,7 +7,7 @@ backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
-from livekit.plugins import silero, groq
+from livekit.plugins import silero, groq, cartesia
 
 from services.rag_service import rag_service
 from config import settings, HOSPITAL_ASSISTANT_SYSTEM_PROMPT
@@ -50,7 +50,7 @@ async def entrypoint(ctx: JobContext):
             api_key=settings.CEREBRAS_API_KEY,
             base_url="https://api.cerebras.ai/v1"
         ),  # FREE Cerebras (ultra-fast inference)
-        tts="cartesia",  # Cartesia for fast TTS
+        tts=cartesia.TTS(voice="6ccbfb76-1fc6-48f7-b71d-91ac6298247b"),  # Female voice
         tools=[search_hospital_knowledge],
     )
 
