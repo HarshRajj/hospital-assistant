@@ -15,6 +15,7 @@ from config import settings
 from services.token_service import token_service
 from services.chat_service import chat_service
 from services.auth_service import auth_service
+from services.appointment_service import appointment_service
 
 
 # Request/Response models
@@ -32,6 +33,13 @@ class ChatResponse(BaseModel):
     response: str
     context_used: bool
     model: str
+
+
+class BookAppointmentRequest(BaseModel):
+    department: str
+    doctor: str
+    date: str  # YYYY-MM-DD
+    time: str  # HH:MM
 
 
 app = FastAPI(title="Hospital Voice Assistant API")
@@ -115,6 +123,108 @@ async def chat(request: ChatRequest):
         return ChatResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")
+
+
+@app.get("/appointments/departments")
+async def get_departments():
+    """Get all available departments and doctors.
+    
+    Returns:
+        Dictionary mapping departments to their doctors
+    """
+    return appointment_service.get_departments()
+
+
+@app.get("/appointments/slots")
+async def get_available_slots(date: str, department: str, doctor: str):
+    """Get available time slots for a specific date, department, and doctor.
+    
+    Args:
+        date: Date in YYYY-MM-DD format
+        department: Department name
+        doctor: Doctor name
+        
+    Returns:
+        List of available time slots
+    """
+    slots = appointment_service.get_available_slots(date, department, doctor)
+    return {"date": date, "department": department, "doctor": doctor, "available_slots": slots}
+
+
+@app.get("/appointments/my")
+async def get_my_appointments(user: dict = Depends(auth_service.verify_token)):
+    """Get all appointments for the authenticated user.
+    
+    Args:
+        user: Authenticated user info from Clerk token
+        
+    Returns:
+        List of user's appointments
+    """
+    # For demo purposes, use a static user ID
+    # In production, extract from JWT token
+    user_id = "demo_user"
+    appointments = appointment_service.get_user_appointments(user_id)
+    return {"appointments": appointments}
+
+
+@app.post("/appointments/book")
+async def book_appointment(
+    request: BookAppointmentRequest,
+    user: dict = Depends(auth_service.verify_token)
+):
+    """Book a new appointment (requires authentication).
+    
+    Args:
+        request: Appointment booking details
+        user: Authenticated user info from Clerk token
+        
+    Returns:
+        Booking confirmation or error
+    """
+    # For demo purposes, use static user info
+    # In production, extract from JWT token
+    user_id = "demo_user"
+    user_name = "Demo User"
+    
+    result = appointment_service.book_appointment(
+        user_id=user_id,
+        user_name=user_name,
+        department=request.department,
+        doctor=request.doctor,
+        date=request.date,
+        time=request.time
+    )
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+
+@app.delete("/appointments/{appointment_id}")
+async def cancel_appointment(
+    appointment_id: str,
+    user: dict = Depends(auth_service.verify_token)
+):
+    """Cancel an appointment (requires authentication).
+    
+    Args:
+        appointment_id: Appointment ID to cancel
+        user: Authenticated user info from Clerk token
+        
+    Returns:
+        Cancellation confirmation or error
+    """
+    # For demo purposes, use static user ID
+    user_id = "demo_user"
+    
+    result = appointment_service.cancel_appointment(appointment_id, user_id)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
 
 
 if __name__ == "__main__":

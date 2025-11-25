@@ -1,5 +1,6 @@
 import VoiceAssistant from "./components/VoiceAssistant";
 import ChatAssistant from "./components/ChatAssistant";
+import CalendarBooking from "./components/CalendarBooking";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 
 export default function Home() {
@@ -86,6 +87,34 @@ export default function Home() {
               <ChatAssistant />
             </div>
           </div>
+        </section>
+
+        {/* Appointment Booking Section */}
+        <section>
+          <div className="mb-10">
+            <h3 className="text-3xl font-bold text-gray-900">Book an Appointment</h3>
+            <p className="text-gray-500 mt-2">Schedule your visit with our expert doctors</p>
+          </div>
+          
+          <SignedIn>
+            <CalendarBooking />
+          </SignedIn>
+          <SignedOut>
+            <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-6">
+                <div className="text-4xl">📅</div>
+              </div>
+              <h4 className="text-2xl font-bold text-gray-900 mb-3">Sign In to Book Appointments</h4>
+              <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto mb-8">
+                Create a free account to book appointments with our specialist doctors and manage your healthcare schedule.
+              </p>
+              <SignUpButton mode="modal">
+                <button className="px-8 py-4 text-base font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all hover:scale-105">
+                  Sign Up to Book Appointments
+                </button>
+              </SignUpButton>
+            </div>
+          </SignedOut>
         </section>
 
         {/* Departments Grid */}
