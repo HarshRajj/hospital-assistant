@@ -8,12 +8,13 @@ from pydantic import BaseModel
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from services.token_service import token_service
 from services.chat_service import chat_service
+from services.auth_service import auth_service
 
 
 # Request/Response models
@@ -58,16 +59,19 @@ async def health():
 
 
 @app.post("/connect")
-async def connect():
-    """Generate a LiveKit token for the voice assistant.
+async def connect(user: dict = Depends(auth_service.verify_token)):
+    """Generate a LiveKit token for the voice assistant (requires authentication).
     
-    This endpoint keeps the LiveKit API secret secure on the backend.
+    This endpoint ensures only authenticated users can access the voice assistant.
+    
+    Args:
+        user: Authenticated user info from Clerk token
     
     Returns:
         Dictionary containing JWT token, LiveKit URL, and room name
         
     Raises:
-        HTTPException: If LiveKit credentials are not configured
+        HTTPException: If LiveKit credentials are not configured or user not authenticated
     """
     if not token_service.is_configured():
         raise HTTPException(

@@ -45,6 +45,9 @@ class Settings:
     # Cerebras Configuration
     CEREBRAS_API_KEY: str = os.getenv("CEREBRAS_API_KEY", "")
     
+    # Clerk Configuration
+    CLERK_SECRET_KEY: str = os.getenv("CLERK_SECRET_KEY", "")
+    
     # Paths
     BACKEND_DIR: Path = backend_dir
     STORAGE_DIR: Path = backend_dir / "storage"
