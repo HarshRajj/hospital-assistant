@@ -4,6 +4,7 @@ from openai import OpenAI
 
 from config import settings, HOSPITAL_ASSISTANT_SYSTEM_PROMPT
 from services.rag_service import rag_service
+from services.appointment_service import appointment_service
 
 
 # Define the RAG function tool for Cerebras
@@ -21,6 +22,64 @@ RAG_TOOL = {
                 }
             },
             "required": ["query"]
+        }
+    }
+}
+
+# Define the appointment booking tool
+APPOINTMENT_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "book_appointment",
+        "description": "Book a medical appointment for the user. Use this when the user wants to schedule an appointment, book a consultation, or see a doctor.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "department": {
+                    "type": "string",
+                    "description": "The medical department (e.g., Cardiology, Pediatrics, Orthopedics, Neurology, Oncology, Ophthalmology, General Medicine)"
+                },
+                "doctor": {
+                    "type": "string",
+                    "description": "The doctor's name (e.g., Dr. Sarah Johnson)"
+                },
+                "date": {
+                    "type": "string",
+                    "description": "Appointment date in YYYY-MM-DD format"
+                },
+                "time": {
+                    "type": "string",
+                    "description": "Appointment time in HH:MM format (24-hour, e.g., 09:00, 14:30)"
+                }
+            },
+            "required": ["department", "doctor", "date", "time"]
+        }
+    }
+}
+
+# Check available appointment slots
+CHECK_SLOTS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "check_available_slots",
+        "description": "Check available appointment time slots for a specific date, department, and doctor. Use this before booking to show available times.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "department": {
+                    "type": "string",
+                    "description": "The medical department"
+                },
+                "doctor": {
+                    "type": "string",
+                    "description": "The doctor's name"
+                },
+                "date": {
+                    "type": "string",
+                    "description": "Date to check in YYYY-MM-DD format"
+                }
+            },
+            "required": ["department", "doctor", "date"]
         }
     }
 }
@@ -47,15 +106,45 @@ class ChatService:
         Returns:
             Tool execution result as string
         """
-        if tool_call.function.name == "search_hospital_knowledge":
-            import json
-            args = json.loads(tool_call.function.arguments)
+        import json
+        
+        function_name = tool_call.function.name
+        args = json.loads(tool_call.function.arguments)
+        
+        if function_name == "search_hospital_knowledge":
             query = args.get("query", "")
-            
             if rag_service.is_available():
                 return await rag_service.search(query)
             else:
                 return "Knowledge base is not available. Please contact the information desk."
+        
+        elif function_name == "book_appointment":
+            # Book appointment using demo user
+            result = appointment_service.book_appointment(
+                user_id="demo_user",
+                user_name="Demo User",
+                department=args.get("department"),
+                doctor=args.get("doctor"),
+                date=args.get("date"),
+                time=args.get("time")
+            )
+            
+            if result["success"]:
+                return result["message"]
+            else:
+                return f"Unable to book appointment: {result['error']}"
+        
+        elif function_name == "check_available_slots":
+            slots = appointment_service.get_available_slots(
+                date=args.get("date"),
+                department=args.get("department"),
+                doctor=args.get("doctor")
+            )
+            
+            if slots:
+                return f"Available time slots on {args.get('date')} with {args.get('doctor')} in {args.get('department')}: {', '.join(slots)}"
+            else:
+                return f"No available slots on {args.get('date')} with {args.get('doctor')} in {args.get('department')}. Please try another date."
         
         return "Unknown tool"
     
@@ -93,7 +182,7 @@ class ChatService:
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
-                    tools=[RAG_TOOL],
+                    tools=[RAG_TOOL, APPOINTMENT_TOOL, CHECK_SLOTS_TOOL],
                     tool_choice="auto",
                     temperature=0.3,
                     max_tokens=500,

@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
+import { useAuth } from "@clerk/nextjs";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export default function VoiceAssistant() {
+  const { getToken } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +39,18 @@ export default function VoiceAssistant() {
     setError(null);
 
     try {
-      // Get token from backend
+      // Get Clerk auth token
+      const clerkToken = await getToken();
+      if (!clerkToken) {
+        throw new Error("Not authenticated. Please sign in.");
+      }
+
+      // Get token from backend with auth
       const response = await fetch(`${BACKEND_URL}/connect`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${clerkToken}`,
         },
       });
 
