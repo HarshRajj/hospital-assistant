@@ -11,7 +11,8 @@ from livekit.plugins import silero, openai, cartesia
 
 from services.rag_service import rag_service
 from services.appointment_service import appointment_service
-from config import settings, HOSPITAL_ASSISTANT_SYSTEM_PROMPT
+from config import settings
+from config.prompts import get_system_prompt
 
 
 @llm.function_tool
@@ -32,6 +33,9 @@ async def search_hospital_knowledge(query: str) -> str:
 
 @llm.function_tool
 async def book_appointment(
+    patient_name: str,
+    patient_age: int,
+    patient_gender: str,
     department: str,
     doctor: str,
     date: str,
@@ -40,9 +44,12 @@ async def book_appointment(
     """Book a medical appointment for the user.
     
     Use this when the user wants to schedule an appointment, book a consultation, or see a doctor.
-    ONLY call this ONCE after user confirms the time slot.
+    ONLY call this ONCE after collecting all patient information and user confirms the time slot.
     
     Args:
+        patient_name: Patient's full name
+        patient_age: Patient's age in years (must be a number)
+        patient_gender: Patient's gender (Male, Female, or Other)
         department: The medical department (e.g., Cardiology, Pediatrics)
         doctor: The doctor's FULL name exactly as shown in available slots (e.g., Dr. Harsh Sharma)
         date: Appointment date in YYYY-MM-DD format
@@ -53,8 +60,10 @@ async def book_appointment(
         doctor = f"Dr. {doctor}"
     
     result = appointment_service.book_appointment(
-        user_id="voice_user",
-        user_name="Voice User",
+        user_id="demo_user",
+        patient_name=patient_name,
+        patient_age=patient_age,
+        patient_gender=patient_gender,
         department=department,
         doctor=doctor,
         date=date,
@@ -63,9 +72,9 @@ async def book_appointment(
     
     if result["success"]:
         # Clear success confirmation
-        return f"Perfect! Your appointment is confirmed with {doctor} in {department} on {date} at {time}. You'll receive a confirmation shortly."
+        return f"Perfect! Appointment confirmed for {patient_name} with {doctor} in {department} on {date} at {time}."
     else:
-        return f"I'm sorry, I couldn't book that. {result['error']}. Would you like to try a different time?"
+        return f"I'm sorry, I couldn't book that. {result['error']}. Would you like to try again?"
 
 
 @llm.function_tool
@@ -114,8 +123,9 @@ async def entrypoint(ctx: JobContext):
     
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # Voice-specific instruction addition to system prompt
-    voice_instructions = f"""{HOSPITAL_ASSISTANT_SYSTEM_PROMPT}
+    # Voice-specific instruction addition to system prompt (fresh timestamp each session)
+    base_prompt = get_system_prompt()
+    voice_instructions = f"""{base_prompt}
 
 ### CRITICAL TOOL USAGE RULES - PREVENT INFINITE LOOPS!
 * **BOOKING PRIORITY:** If user asks to "book", "schedule", or "make appointment" - ALWAYS use booking tools, even if they mention symptoms
@@ -126,11 +136,17 @@ async def entrypoint(ctx: JobContext):
   - Finding which doctor to see for specific conditions
 
 ### APPOINTMENT BOOKING FLOW (FOLLOW EXACTLY!):
-1. **User wants appointment** -> Ask: "Which department?" or use search_hospital_knowledge if they mention symptoms
-2. **User picks department** -> Call search_hospital_knowledge("[department] doctors") to get doctor name
-3. **You have doctor name** -> Ask: "What date works for you?"
-4. **User provides date** -> Call check_available_slots() ONCE. Show 2-3 options. WAIT for user response.
-5. **User picks time** -> Call book_appointment() ONCE. Confirm booking. STOP.
+1. **User wants appointment** -> Ask for PATIENT INFO first: "May I have the patient's name, age, and gender?"
+2. **Got patient info** -> Ask: "Which department?" or suggest based on symptoms
+3. **User picks department** -> Call search_hospital_knowledge("[department] doctors") to get doctor name
+4. **You have doctor name** -> Ask: "What date works for you?"
+5. **User provides date** -> Call check_available_slots() ONCE. Show 2-3 options. WAIT for user response.
+6. **User picks time** -> Call book_appointment() with ALL info (patient_name, patient_age, patient_gender, department, doctor, date, time). Confirm booking. STOP.
+
+### PATIENT INFO COLLECTION (REQUIRED BEFORE BOOKING!):
+* You MUST collect: patient name, age (number), and gender (Male/Female/Other)
+* Ask naturally: "Before I book, may I have the patient's name?" then "And their age and gender?"
+* If booking for self: "Is this appointment for yourself? May I have your name, age, and gender?"
 
 ### CRITICAL: STOP AFTER BOOKING!
 * After successful book_appointment(), say confirmation and ASK if they need anything else
@@ -144,8 +160,6 @@ async def entrypoint(ctx: JobContext):
 
 ### VOICE OUTPUT CONSTRAINTS (CRITICAL FOR TTS)
 * **Length:** Maximum 2-3 sentences per response
-* **Style:** Natural, conversational spoken English
-* **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters, NO bullet points
 * **Style:** Natural, conversational spoken English
 * **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters, NO bullet points
 * **Readability:** This text goes to Text-to-Speech - write for listening, not reading

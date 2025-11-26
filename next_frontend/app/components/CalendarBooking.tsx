@@ -11,6 +11,9 @@ interface Department {
 
 interface Appointment {
   id: string;
+  patient_name: string;
+  patient_age: number;
+  patient_gender: string;
   department: string;
   doctor: string;
   date: string;
@@ -21,6 +24,9 @@ interface Appointment {
 export default function CalendarBooking() {
   const { getToken } = useAuth();
   const [departments, setDepartments] = useState<Department>({});
+  const [patientName, setPatientName] = useState<string>("");
+  const [patientAge, setPatientAge] = useState<string>("");
+  const [patientGender, setPatientGender] = useState<string>("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -92,8 +98,14 @@ export default function CalendarBooking() {
   };
 
   const handleBookAppointment = async () => {
-    if (!selectedDepartment || !selectedDoctor || !selectedDate || !selectedTime) {
-      setMessage({ type: "error", text: "Please fill in all fields" });
+    if (!patientName || !patientAge || !patientGender || !selectedDepartment || !selectedDoctor || !selectedDate || !selectedTime) {
+      setMessage({ type: "error", text: "Please fill in all fields including patient information" });
+      return;
+    }
+
+    const age = parseInt(patientAge);
+    if (isNaN(age) || age < 0 || age > 150) {
+      setMessage({ type: "error", text: "Please enter a valid age (0-150)" });
       return;
     }
 
@@ -109,6 +121,9 @@ export default function CalendarBooking() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          patient_name: patientName,
+          patient_age: age,
+          patient_gender: patientGender,
           department: selectedDepartment,
           doctor: selectedDoctor,
           date: selectedDate,
@@ -121,6 +136,9 @@ export default function CalendarBooking() {
       if (response.ok) {
         setMessage({ type: "success", text: data.message });
         // Reset form
+        setPatientName("");
+        setPatientAge("");
+        setPatientGender("");
         setSelectedDepartment("");
         setSelectedDoctor("");
         setSelectedDate("");
@@ -186,6 +204,47 @@ export default function CalendarBooking() {
         )}
 
         <div className="grid md:grid-cols-2 gap-6">
+          {/* Patient Name */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Patient Name</label>
+            <input
+              type="text"
+              value={patientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              placeholder="Enter patient's full name"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Patient Age */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Age</label>
+            <input
+              type="number"
+              value={patientAge}
+              onChange={(e) => setPatientAge(e.target.value)}
+              placeholder="Enter age"
+              min="0"
+              max="150"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Patient Gender */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Gender</label>
+            <select
+              value={patientGender}
+              onChange={(e) => setPatientGender(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
           {/* Department Selection */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Department</label>
@@ -299,7 +358,12 @@ export default function CalendarBooking() {
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-lg font-bold text-gray-900">{apt.department}</span>
+                    <span className="text-lg font-bold text-gray-900">{apt.patient_name}</span>
+                    <span className="text-sm text-gray-500">•</span>
+                    <span className="text-sm text-gray-600">{apt.patient_age} yrs, {apt.patient_gender}</span>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-medium text-blue-600">{apt.department}</span>
                     <span className="text-sm text-gray-500">•</span>
                     <span className="text-sm text-gray-600">{apt.doctor}</span>
                   </div>

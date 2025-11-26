@@ -1,0 +1,28 @@
+{
+  "appointments": {
+    "APT-20251126-0001": {
+      "id": "APT-20251126-0001",
+      "user_id": "demo_user",
+      "user_name": "Demo User",
+      "department": "Cardiology",
+      "doctor": "Dr. Harsh Sharma",
+      "date": "2025-11-27",
+      "time": "10:00",
+      "status": "confirmed",
+      "created_at": "2025-11-26T11:49:33.888106"
+    },
+    "APT-20251126-0002": {
+      "id": "APT-20251126-0002",
+      "user_id": "demo_user",
+      "user_name": "Demo User",
+      "department": "General Medicine",
+      "doctor": "Dr. Rajesh Kumar",
+      "date": "2025-11-26",
+      "time": "11:00",
+      "status": "confirmed",
+      "created_at": "2025-11-26T11:52:48.207425"
+    }
+  },
+  "counter": 2,
+  "last_updated": "2025-11-26T11:52:48.207425"
+}

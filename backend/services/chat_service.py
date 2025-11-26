@@ -2,7 +2,8 @@
 from typing import List, Dict
 from openai import OpenAI
 
-from config import settings, HOSPITAL_ASSISTANT_SYSTEM_PROMPT
+from config import settings
+from config.prompts import get_system_prompt
 from services.rag_service import rag_service
 from services.appointment_service import appointment_service
 
@@ -31,17 +32,30 @@ APPOINTMENT_TOOL = {
     "type": "function",
     "function": {
         "name": "book_appointment",
-        "description": "Book a medical appointment for the user. Use this when the user wants to schedule an appointment, book a consultation, or see a doctor.",
+        "description": "Book a medical appointment for the user. Use this when the user wants to schedule an appointment. You MUST collect patient name, age, and gender before booking.",
         "parameters": {
             "type": "object",
             "properties": {
+                "patient_name": {
+                    "type": "string",
+                    "description": "Patient's full name"
+                },
+                "patient_age": {
+                    "type": "integer",
+                    "description": "Patient's age in years"
+                },
+                "patient_gender": {
+                    "type": "string",
+                    "enum": ["Male", "Female", "Other"],
+                    "description": "Patient's gender"
+                },
                 "department": {
                     "type": "string",
-                    "description": "The medical department (e.g., Cardiology, Pediatrics, Orthopedics, Neurology, Oncology, Ophthalmology, General Medicine)"
+                    "description": "The medical department (e.g., Cardiology, Pediatrics, Orthopedics, Neurology, General Medicine)"
                 },
                 "doctor": {
                     "type": "string",
-                    "description": "The doctor's name (e.g., Dr. Sarah Johnson)"
+                    "description": "The doctor's name (e.g., Dr. Harsh Sharma)"
                 },
                 "date": {
                     "type": "string",
@@ -52,7 +66,7 @@ APPOINTMENT_TOOL = {
                     "description": "Appointment time in HH:MM format (24-hour, e.g., 09:00, 14:30)"
                 }
             },
-            "required": ["department", "doctor", "date", "time"]
+            "required": ["patient_name", "patient_age", "patient_gender", "department", "doctor", "date", "time"]
         }
     }
 }
@@ -95,7 +109,10 @@ class ChatService:
             base_url="https://api.cerebras.ai/v1"
         )
         self.model = "gpt-oss-120b"
-        self.system_prompt = HOSPITAL_ASSISTANT_SYSTEM_PROMPT
+    
+    def _get_system_prompt(self) -> str:
+        """Get fresh system prompt with current date/time."""
+        return get_system_prompt()
     
     async def _execute_tool_call(self, tool_call) -> str:
         """Execute a tool call and return the result.
@@ -122,7 +139,9 @@ class ChatService:
             # Book appointment using demo user
             result = appointment_service.book_appointment(
                 user_id="demo_user",
-                user_name="Demo User",
+                patient_name=args.get("patient_name"),
+                patient_age=args.get("patient_age"),
+                patient_gender=args.get("patient_gender"),
                 department=args.get("department"),
                 doctor=args.get("doctor"),
                 date=args.get("date"),
@@ -165,8 +184,8 @@ class ChatService:
         if conversation_history is None:
             conversation_history = []
         
-        # Build messages for LLM
-        messages = [{"role": "system", "content": self.system_prompt}]
+        # Build messages for LLM with fresh timestamp
+        messages = [{"role": "system", "content": self._get_system_prompt()}]
         messages.extend(conversation_history)
         messages.append({"role": "user", "content": message})
         

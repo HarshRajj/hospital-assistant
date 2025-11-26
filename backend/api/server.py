@@ -36,6 +36,9 @@ class ChatResponse(BaseModel):
 
 
 class BookAppointmentRequest(BaseModel):
+    patient_name: str
+    patient_age: int
+    patient_gender: str  # Male, Female, Other
     department: str
     doctor: str
     date: str  # YYYY-MM-DD
@@ -182,14 +185,15 @@ async def book_appointment(
     Returns:
         Booking confirmation or error
     """
-    # For demo purposes, use static user info
+    # For demo purposes, use static user ID
     # In production, extract from JWT token
     user_id = "demo_user"
-    user_name = "Demo User"
     
     result = appointment_service.book_appointment(
         user_id=user_id,
-        user_name=user_name,
+        patient_name=request.patient_name,
+        patient_age=request.patient_age,
+        patient_gender=request.patient_gender,
         department=request.department,
         doctor=request.doctor,
         date=request.date,

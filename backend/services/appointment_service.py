@@ -8,7 +8,9 @@ class Appointment(BaseModel):
     """Appointment data model."""
     id: str
     user_id: str
-    user_name: str
+    patient_name: str
+    patient_age: int
+    patient_gender: str  # Male, Female, Other
     department: str
     doctor: str
     date: str  # YYYY-MM-DD format
@@ -71,13 +73,32 @@ class AppointmentService:
             and apt.doctor == doctor and apt.status == "confirmed"
         ]
         
-        # Return available slots
-        return [slot for slot in self.TIME_SLOTS if slot not in booked_slots]
+        # Get available slots (not booked)
+        available = [slot for slot in self.TIME_SLOTS if slot not in booked_slots]
+        
+        # If date is today, filter out past time slots
+        try:
+            appointment_date = datetime.strptime(date, "%Y-%m-%d").date()
+            today = datetime.now().date()
+            
+            if appointment_date == today:
+                current_time = datetime.now().strftime("%H:%M")
+                # Only include slots that are in the future (with 30 min buffer)
+                available = [slot for slot in available if slot > current_time]
+            elif appointment_date < today:
+                # Past dates have no available slots
+                return []
+        except ValueError:
+            pass  # Invalid date format, return all available
+        
+        return available
     
     def book_appointment(
         self,
         user_id: str,
-        user_name: str,
+        patient_name: str,
+        patient_age: int,
+        patient_gender: str,
         department: str,
         doctor: str,
         date: str,
@@ -87,7 +108,9 @@ class AppointmentService:
         
         Args:
             user_id: User ID from authentication
-            user_name: User's display name
+            patient_name: Patient's full name
+            patient_age: Patient's age in years
+            patient_gender: Patient's gender (Male, Female, Other)
             department: Department name
             doctor: Doctor name
             date: Date in YYYY-MM-DD format
@@ -139,11 +162,32 @@ class AppointmentService:
                 "error": f"Time slot {time} is not available. Available slots: {', '.join(available_slots)}"
             }
         
+        # Validate patient info
+        if not patient_name or len(patient_name.strip()) < 2:
+            return {
+                "success": False,
+                "error": "Please provide a valid patient name"
+            }
+        
+        if not isinstance(patient_age, int) or patient_age < 0 or patient_age > 150:
+            return {
+                "success": False,
+                "error": "Please provide a valid age (0-150)"
+            }
+        
+        if patient_gender not in ["Male", "Female", "Other"]:
+            return {
+                "success": False,
+                "error": "Gender must be Male, Female, or Other"
+            }
+        
         # Create appointment
         appointment = Appointment(
             id=self._generate_id(),
             user_id=user_id,
-            user_name=user_name,
+            patient_name=patient_name.strip(),
+            patient_age=patient_age,
+            patient_gender=patient_gender,
             department=department,
             doctor=doctor,
             date=date,
@@ -157,7 +201,7 @@ class AppointmentService:
         return {
             "success": True,
             "appointment": appointment.model_dump(),
-            "message": f"Appointment booked with {doctor} in {department} on {date} at {time}"
+            "message": f"Appointment booked for {patient_name} with {doctor} in {department} on {date} at {time}"
         }
     
     def get_user_appointments(self, user_id: str) -> List[Dict]:
