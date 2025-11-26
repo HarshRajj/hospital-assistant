@@ -31,5 +31,6 @@ Thumbs.db
 
 # Project specific
 storage/local_index/
+data/appointments.json
 *.log
 .python-version
