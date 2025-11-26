@@ -44,6 +44,7 @@ Thumbs.db
 # Backend specific
 backend/storage/local_index/
 backend/.pytest_cache/
+backend/data/appointments.json
 
 # Node.js / Next.js
 node_modules/
@@ -65,3 +66,5 @@ htmlcov/
 # Misc
 *.bak
 .cache/
+
+data/appointments.json

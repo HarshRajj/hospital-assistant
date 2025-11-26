@@ -11,7 +11,8 @@ from livekit.plugins import silero, openai, cartesia
 
 from services.rag_service import rag_service
 from services.appointment_service import appointment_service
-from config import settings, HOSPITAL_ASSISTANT_SYSTEM_PROMPT
+from config import settings
+from config.prompts import get_system_prompt
 
 
 @llm.function_tool
@@ -32,59 +33,33 @@ async def search_hospital_knowledge(query: str) -> str:
 
 @llm.function_tool
 async def book_appointment(
-    department: str,
-    doctor: str,
-    date: str,
-    time: str
+    patient_name: str, patient_age: int, patient_gender: str,
+    department: str, doctor: str, date: str, time: str
 ) -> str:
-    """Book a medical appointment for the user.
+    """Book appointment. Args: patient_name, patient_age, patient_gender (Male/Female/Other), department, doctor, date (YYYY-MM-DD), time (HH:MM)."""
+    if not doctor.startswith("Dr. "):
+        doctor = f"Dr. {doctor}"
     
-    Use this when the user wants to schedule an appointment, book a consultation, or see a doctor.
-    
-    Args:
-        department: The medical department (e.g., Cardiology, Pediatrics)
-        doctor: The doctor's name (e.g., Dr. Sarah Johnson)
-        date: Appointment date in YYYY-MM-DD format
-        time: Appointment time in HH:MM format (24-hour)
-    """
     result = appointment_service.book_appointment(
-        user_id="voice_user",
-        user_name="Voice User",
-        department=department,
-        doctor=doctor,
-        date=date,
-        time=time
+        "demo_user", patient_name, patient_age, patient_gender, department, doctor, date, time
     )
     
     if result["success"]:
-        return result["message"]
-    else:
-        return f"I couldn't book that appointment: {result['error']}"
+        return f"Booked! {patient_name} with {doctor} on {date} at {time}."
+    return f"Sorry, couldn't book. {result['error']}."
 
 
 @llm.function_tool
-async def check_available_slots(
-    department: str,
-    doctor: str,
-    date: str
-) -> str:
-    """Check available appointment time slots.
+async def check_available_slots(department: str, doctor: str, date: str) -> str:
+    """Check available slots. Args: department, doctor, date (YYYY-MM-DD)."""
+    if not doctor.startswith("Dr. "):
+        doctor = f"Dr. {doctor}"
     
-    Use this before booking to show available times to the user.
-    
-    Args:
-        department: The medical department
-        doctor: The doctor's name
-        date: Date to check in YYYY-MM-DD format
-    """
     slots = appointment_service.get_available_slots(date, department, doctor)
     
     if slots:
-        # Format nicely for voice
-        slot_list = ", ".join(slots[:5])  # Only first 5 to keep voice response short
-        return f"Available times for {doctor} in {department} on {date}: {slot_list}"
-    else:
-        return f"I'm sorry, there are no available slots on {date}. Would you like to try another date?"
+        return f"Available: {', '.join(slots[:3])}. Which time?"
+    return f"No slots on {date}. Try another date?"
 
 
 async def entrypoint(ctx: JobContext):
@@ -98,29 +73,15 @@ async def entrypoint(ctx: JobContext):
     
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # Voice-specific instruction addition to system prompt
-    voice_instructions = f"""{HOSPITAL_ASSISTANT_SYSTEM_PROMPT}
+    # Voice-specific instructions (concise for shorter responses)
+    base_prompt = get_system_prompt()
+    voice_instructions = f"""{base_prompt}
 
-### CRITICAL TOOL USAGE RULES
-* **ALWAYS use search_hospital_knowledge() for ANY question about:**
-  - Hospital departments, doctors, services, facilities
-  - Operating hours, visiting hours, cafeteria hours
-  - Policies, procedures, locations, contact information
-  - Emergency services, parking, amenities
-* **NEVER answer hospital questions from memory** - you MUST call the search function
-* **If user asks about appointments:** Use check_available_slots() first, then book_appointment()
-* **The knowledge base has ALL hospital information** - trust it completely
+KEEP RESPONSES VERY SHORT - ONE SENTENCE WHEN POSSIBLE.
 
-### VOICE OUTPUT CONSTRAINTS (CRITICAL FOR TTS)
-* **Length:** Keep responses concise - maximum 2-3 sentences for simple queries
-* **Style:** Natural, conversational spoken English. Avoid robotic phrasing
-* **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters, NO bullet points
-* **Readability:** This text goes directly to a Text-to-Speech engine - write for listening, not reading
-* **Numbers:** Spell out numbers (e.g., "twenty-four seven" not "24/7")
-* **Pronunciation:** Use phonetically clear language
-
-### IMPORTANT
-If the search_hospital_knowledge function returns information, use it EXACTLY as provided. Do not say "I don't have that information" if the function returned results.
+For bookings: Get name, age, gender first. Then department, date, time. Confirm briefly.
+For questions: Use search_hospital_knowledge. Give brief answer.
+Only suggest emergency if they say "emergency" or "urgent help now".
 """
 
     agent = Agent(
@@ -139,10 +100,7 @@ If the search_hospital_knowledge function returns information, use it EXACTLY as
     session = AgentSession()
     await session.start(agent=agent, room=ctx.room)
 
-    await session.say(
-        "Hello! Welcome to Arogya Med-City Hospital. How can I help you today?", 
-        allow_interruptions=True
-    )
+    await session.say("Hello! How can I help you?", allow_interruptions=True)
 
 
 if __name__ == "__main__":
