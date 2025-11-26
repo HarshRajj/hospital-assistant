@@ -3,7 +3,9 @@
     "APT-20251126-0001": {
       "id": "APT-20251126-0001",
       "user_id": "demo_user",
-      "user_name": "Demo User",
+      "patient_name": "Demo User",
+      "patient_age": 0,
+      "patient_gender": "Other",
       "department": "Cardiology",
       "doctor": "Dr. Harsh Sharma",
       "date": "2025-11-27",
@@ -14,15 +16,43 @@
     "APT-20251126-0002": {
       "id": "APT-20251126-0002",
       "user_id": "demo_user",
-      "user_name": "Demo User",
+      "patient_name": "Demo User",
+      "patient_age": 0,
+      "patient_gender": "Other",
       "department": "General Medicine",
       "doctor": "Dr. Rajesh Kumar",
       "date": "2025-11-26",
       "time": "11:00",
       "status": "confirmed",
       "created_at": "2025-11-26T11:52:48.207425"
+    },
+    "APT-20251126-0003": {
+      "id": "APT-20251126-0003",
+      "user_id": "demo_user",
+      "patient_name": "Harsh",
+      "patient_age": 21,
+      "patient_gender": "Male",
+      "department": "Orthopedics",
+      "doctor": "Dr. Sameer Khan",
+      "date": "2025-11-27",
+      "time": "10:00",
+      "status": "confirmed",
+      "created_at": "2025-11-26T22:38:36.649707"
+    },
+    "APT-20251126-0004": {
+      "id": "APT-20251126-0004",
+      "user_id": "demo_user",
+      "patient_name": "Harsh",
+      "patient_age": 21,
+      "patient_gender": "Male",
+      "department": "Orthopedics",
+      "doctor": "Dr. Sameer Khan",
+      "date": "2025-11-27",
+      "time": "09:30",
+      "status": "confirmed",
+      "created_at": "2025-11-26T22:38:38.335813"
     }
   },
-  "counter": 2,
-  "last_updated": "2025-11-26T11:52:48.207425"
+  "counter": 4,
+  "last_updated": "2025-11-26T22:38:38.335813"
 }

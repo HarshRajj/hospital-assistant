@@ -33,83 +33,33 @@ async def search_hospital_knowledge(query: str) -> str:
 
 @llm.function_tool
 async def book_appointment(
-    patient_name: str,
-    patient_age: int,
-    patient_gender: str,
-    department: str,
-    doctor: str,
-    date: str,
-    time: str
+    patient_name: str, patient_age: int, patient_gender: str,
+    department: str, doctor: str, date: str, time: str
 ) -> str:
-    """Book a medical appointment for the user.
-    
-    Use this when the user wants to schedule an appointment, book a consultation, or see a doctor.
-    ONLY call this ONCE after collecting all patient information and user confirms the time slot.
-    
-    Args:
-        patient_name: Patient's full name
-        patient_age: Patient's age in years (must be a number)
-        patient_gender: Patient's gender (Male, Female, or Other)
-        department: The medical department (e.g., Cardiology, Pediatrics)
-        doctor: The doctor's FULL name exactly as shown in available slots (e.g., Dr. Harsh Sharma)
-        date: Appointment date in YYYY-MM-DD format
-        time: Appointment time in HH:MM format (24-hour)
-    """
-    # Normalize doctor name - handle partial names like "Harsh Sharma"
+    """Book appointment. Args: patient_name, patient_age, patient_gender (Male/Female/Other), department, doctor, date (YYYY-MM-DD), time (HH:MM)."""
     if not doctor.startswith("Dr. "):
         doctor = f"Dr. {doctor}"
     
     result = appointment_service.book_appointment(
-        user_id="demo_user",
-        patient_name=patient_name,
-        patient_age=patient_age,
-        patient_gender=patient_gender,
-        department=department,
-        doctor=doctor,
-        date=date,
-        time=time
+        "demo_user", patient_name, patient_age, patient_gender, department, doctor, date, time
     )
     
     if result["success"]:
-        # Clear success confirmation
-        return f"Perfect! Appointment confirmed for {patient_name} with {doctor} in {department} on {date} at {time}."
-    else:
-        return f"I'm sorry, I couldn't book that. {result['error']}. Would you like to try again?"
+        return f"Booked! {patient_name} with {doctor} on {date} at {time}."
+    return f"Sorry, couldn't book. {result['error']}."
 
 
 @llm.function_tool
-async def check_available_slots(
-    department: str,
-    doctor: str,
-    date: str
-) -> str:
-    """Check available appointment time slots.
-    
-    Use this ONLY ONCE when user asks for available times.
-    Then WAIT for user to pick a time before calling book_appointment.
-    DO NOT call this multiple times or try multiple doctors automatically.
-    
-    Args:
-        department: The medical department
-        doctor: The doctor's FULL name (e.g., Dr. Harsh Sharma)
-        date: Date to check in YYYY-MM-DD format
-    """
-    # Normalize doctor name
+async def check_available_slots(department: str, doctor: str, date: str) -> str:
+    """Check available slots. Args: department, doctor, date (YYYY-MM-DD)."""
     if not doctor.startswith("Dr. "):
         doctor = f"Dr. {doctor}"
     
     slots = appointment_service.get_available_slots(date, department, doctor)
     
     if slots:
-        # Format nicely for voice - show first 3 options
-        if len(slots) > 3:
-            slot_list = ", ".join(slots[:3])
-            return f"I have several openings on {date}. The earliest are {slot_list}. Which time works best for you?"
-        else:
-            slot_list = ", ".join(slots)
-            return f"Available times on {date}: {slot_list}. Which would you prefer?"
-    else:
-        return f"I'm sorry, {doctor} has no availability on {date}. Would you like to try a different date?"
+        return f"Available: {', '.join(slots[:3])}. Which time?"
+    return f"No slots on {date}. Try another date?"
 
 
 async def entrypoint(ctx: JobContext):
@@ -123,55 +73,15 @@ async def entrypoint(ctx: JobContext):
     
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
 
-    # Voice-specific instruction addition to system prompt (fresh timestamp each session)
+    # Voice-specific instructions (concise for shorter responses)
     base_prompt = get_system_prompt()
     voice_instructions = f"""{base_prompt}
 
-### CRITICAL TOOL USAGE RULES - PREVENT INFINITE LOOPS!
-* **BOOKING PRIORITY:** If user asks to "book", "schedule", or "make appointment" - ALWAYS use booking tools, even if they mention symptoms
-* **ALWAYS use search_hospital_knowledge() for:**
-  - Hospital departments, doctors, services, facilities
-  - Operating hours, visiting hours, cafeteria hours  
-  - Policies, procedures, locations, contact information
-  - Finding which doctor to see for specific conditions
+KEEP RESPONSES VERY SHORT - ONE SENTENCE WHEN POSSIBLE.
 
-### APPOINTMENT BOOKING FLOW (FOLLOW EXACTLY!):
-1. **User wants appointment** -> Ask for PATIENT INFO first: "May I have the patient's name, age, and gender?"
-2. **Got patient info** -> Ask: "Which department?" or suggest based on symptoms
-3. **User picks department** -> Call search_hospital_knowledge("[department] doctors") to get doctor name
-4. **You have doctor name** -> Ask: "What date works for you?"
-5. **User provides date** -> Call check_available_slots() ONCE. Show 2-3 options. WAIT for user response.
-6. **User picks time** -> Call book_appointment() with ALL info (patient_name, patient_age, patient_gender, department, doctor, date, time). Confirm booking. STOP.
-
-### PATIENT INFO COLLECTION (REQUIRED BEFORE BOOKING!):
-* You MUST collect: patient name, age (number), and gender (Male/Female/Other)
-* Ask naturally: "Before I book, may I have the patient's name?" then "And their age and gender?"
-* If booking for self: "Is this appointment for yourself? May I have your name, age, and gender?"
-
-### CRITICAL: STOP AFTER BOOKING!
-* After successful book_appointment(), say confirmation and ASK if they need anything else
-* DO NOT automatically check more slots or try other doctors
-* DO NOT call tools in loops - ONE tool call per user response
-* If booking fails, explain why and ask user what they'd like to do
-
-### EMERGENCY OVERRIDE:
-* **DO NOT redirect to emergency** unless user explicitly says "emergency", "urgent now", or "critical help"
-* **Symptoms + Booking = Book appointment** (e.g., "chest pain appointment" = Cardiology booking)
-
-### VOICE OUTPUT CONSTRAINTS (CRITICAL FOR TTS)
-* **Length:** Maximum 2-3 sentences per response
-* **Style:** Natural, conversational spoken English
-* **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters, NO bullet points
-* **Readability:** This text goes to Text-to-Speech - write for listening, not reading
-* **Numbers:** Spell out numbers (e.g., "two PM" not "14:00")
-* **Pronunciation:** Use phonetically clear language
-
-### EXAMPLES
-❌ WRONG: "You have chest pain, go to emergency immediately"
-✅ RIGHT: "I can help you book a Cardiology appointment for your chest pain. Which doctor would you prefer?"
-
-❌ WRONG: "Let me check if we have that information" [without calling tool]
-✅ RIGHT: [Calls search_hospital_knowledge then provides answer]
+For bookings: Get name, age, gender first. Then department, date, time. Confirm briefly.
+For questions: Use search_hospital_knowledge. Give brief answer.
+Only suggest emergency if they say "emergency" or "urgent help now".
 """
 
     agent = Agent(
@@ -190,10 +100,7 @@ async def entrypoint(ctx: JobContext):
     session = AgentSession()
     await session.start(agent=agent, room=ctx.room)
 
-    await session.say(
-        "Hello! Welcome to Arogya Med-City Hospital. How can I help you today?", 
-        allow_interruptions=True
-    )
+    await session.say("Hello! How can I help you?", allow_interruptions=True)
 
 
 if __name__ == "__main__":
