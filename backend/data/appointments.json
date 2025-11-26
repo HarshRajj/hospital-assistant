@@ -49,10 +49,10 @@
       "doctor": "Dr. Sameer Khan",
       "date": "2025-11-27",
       "time": "09:30",
-      "status": "confirmed",
+      "status": "cancelled",
       "created_at": "2025-11-26T22:38:38.335813"
     }
   },
   "counter": 4,
-  "last_updated": "2025-11-26T22:48:25.538744"
+  "last_updated": "2025-11-26T22:51:53.331054"
 }
