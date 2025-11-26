@@ -20,15 +20,19 @@ class Appointment(BaseModel):
 class AppointmentService:
     """Service for managing appointments in-memory."""
     
-    # Available departments with doctors
+    # Available departments with doctors (synced with Knowledgebase.txt)
     DEPARTMENTS = {
-        "Cardiology": ["Dr. Sarah Johnson", "Dr. Michael Chen"],
-        "Pediatrics": ["Dr. Emily Williams", "Dr. James Martinez"],
-        "Orthopedics": ["Dr. Robert Brown", "Dr. Lisa Anderson"],
-        "Neurology": ["Dr. David Wilson", "Dr. Jennifer Taylor"],
-        "Oncology": ["Dr. Christopher Lee", "Dr. Amanda White"],
-        "Ophthalmology": ["Dr. Thomas Garcia", "Dr. Maria Rodriguez"],
-        "General Medicine": ["Dr. Daniel Thompson", "Dr. Patricia Moore"],
+        "Cardiology": ["Dr. Harsh Sharma"],
+        "Pediatrics": ["Dr. Arjun Gupta"],
+        "Orthopedics": ["Dr. Sameer Khan"],
+        "Neurology": ["Dr. Ananya Reddy"],
+        "Oncology": ["Dr. Fatima Ahmed"],
+        "Dermatology": ["Dr. Meera Desai", "Dr. Rohit Malhotra"],
+        "General Surgery": ["Dr. Vikram Singh", "Dr. Anjali Mehta"],
+        "General Medicine": ["Dr. Rajesh Kumar", "Dr. Kavita Joshi", "Dr. Suresh Iyer"],
+        "Gastroenterology": ["Dr. Anil Verma"],
+        "Nephrology": ["Dr. Pooja Nair"],
+        "OB-GYN": ["Dr. Sneha Pillai", "Dr. Ritu Kapoor"],
     }
     
     # Available time slots (30-min intervals, 9 AM - 5 PM)

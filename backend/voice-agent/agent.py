@@ -40,13 +40,18 @@ async def book_appointment(
     """Book a medical appointment for the user.
     
     Use this when the user wants to schedule an appointment, book a consultation, or see a doctor.
+    ONLY call this ONCE after user confirms the time slot.
     
     Args:
         department: The medical department (e.g., Cardiology, Pediatrics)
-        doctor: The doctor's name (e.g., Dr. Sarah Johnson)
+        doctor: The doctor's FULL name exactly as shown in available slots (e.g., Dr. Harsh Sharma)
         date: Appointment date in YYYY-MM-DD format
         time: Appointment time in HH:MM format (24-hour)
     """
+    # Normalize doctor name - handle partial names like "Harsh Sharma"
+    if not doctor.startswith("Dr. "):
+        doctor = f"Dr. {doctor}"
+    
     result = appointment_service.book_appointment(
         user_id="voice_user",
         user_name="Voice User",
@@ -57,9 +62,10 @@ async def book_appointment(
     )
     
     if result["success"]:
-        return result["message"]
+        # Clear success confirmation
+        return f"Perfect! Your appointment is confirmed with {doctor} in {department} on {date} at {time}. You'll receive a confirmation shortly."
     else:
-        return f"I couldn't book that appointment: {result['error']}"
+        return f"I'm sorry, I couldn't book that. {result['error']}. Would you like to try a different time?"
 
 
 @llm.function_tool
@@ -70,21 +76,31 @@ async def check_available_slots(
 ) -> str:
     """Check available appointment time slots.
     
-    Use this before booking to show available times to the user.
+    Use this ONLY ONCE when user asks for available times.
+    Then WAIT for user to pick a time before calling book_appointment.
+    DO NOT call this multiple times or try multiple doctors automatically.
     
     Args:
         department: The medical department
-        doctor: The doctor's name
+        doctor: The doctor's FULL name (e.g., Dr. Harsh Sharma)
         date: Date to check in YYYY-MM-DD format
     """
+    # Normalize doctor name
+    if not doctor.startswith("Dr. "):
+        doctor = f"Dr. {doctor}"
+    
     slots = appointment_service.get_available_slots(date, department, doctor)
     
     if slots:
-        # Format nicely for voice
-        slot_list = ", ".join(slots[:5])  # Only first 5 to keep voice response short
-        return f"Available times for {doctor} in {department} on {date}: {slot_list}"
+        # Format nicely for voice - show first 3 options
+        if len(slots) > 3:
+            slot_list = ", ".join(slots[:3])
+            return f"I have several openings on {date}. The earliest are {slot_list}. Which time works best for you?"
+        else:
+            slot_list = ", ".join(slots)
+            return f"Available times on {date}: {slot_list}. Which would you prefer?"
     else:
-        return f"I'm sorry, there are no available slots on {date}. Would you like to try another date?"
+        return f"I'm sorry, {doctor} has no availability on {date}. Would you like to try a different date?"
 
 
 async def entrypoint(ctx: JobContext):
@@ -101,26 +117,47 @@ async def entrypoint(ctx: JobContext):
     # Voice-specific instruction addition to system prompt
     voice_instructions = f"""{HOSPITAL_ASSISTANT_SYSTEM_PROMPT}
 
-### CRITICAL TOOL USAGE RULES
-* **ALWAYS use search_hospital_knowledge() for ANY question about:**
+### CRITICAL TOOL USAGE RULES - PREVENT INFINITE LOOPS!
+* **BOOKING PRIORITY:** If user asks to "book", "schedule", or "make appointment" - ALWAYS use booking tools, even if they mention symptoms
+* **ALWAYS use search_hospital_knowledge() for:**
   - Hospital departments, doctors, services, facilities
-  - Operating hours, visiting hours, cafeteria hours
+  - Operating hours, visiting hours, cafeteria hours  
   - Policies, procedures, locations, contact information
-  - Emergency services, parking, amenities
-* **NEVER answer hospital questions from memory** - you MUST call the search function
-* **If user asks about appointments:** Use check_available_slots() first, then book_appointment()
-* **The knowledge base has ALL hospital information** - trust it completely
+  - Finding which doctor to see for specific conditions
+
+### APPOINTMENT BOOKING FLOW (FOLLOW EXACTLY!):
+1. **User wants appointment** -> Ask: "Which department?" or use search_hospital_knowledge if they mention symptoms
+2. **User picks department** -> Call search_hospital_knowledge("[department] doctors") to get doctor name
+3. **You have doctor name** -> Ask: "What date works for you?"
+4. **User provides date** -> Call check_available_slots() ONCE. Show 2-3 options. WAIT for user response.
+5. **User picks time** -> Call book_appointment() ONCE. Confirm booking. STOP.
+
+### CRITICAL: STOP AFTER BOOKING!
+* After successful book_appointment(), say confirmation and ASK if they need anything else
+* DO NOT automatically check more slots or try other doctors
+* DO NOT call tools in loops - ONE tool call per user response
+* If booking fails, explain why and ask user what they'd like to do
+
+### EMERGENCY OVERRIDE:
+* **DO NOT redirect to emergency** unless user explicitly says "emergency", "urgent now", or "critical help"
+* **Symptoms + Booking = Book appointment** (e.g., "chest pain appointment" = Cardiology booking)
 
 ### VOICE OUTPUT CONSTRAINTS (CRITICAL FOR TTS)
-* **Length:** Keep responses concise - maximum 2-3 sentences for simple queries
-* **Style:** Natural, conversational spoken English. Avoid robotic phrasing
+* **Length:** Maximum 2-3 sentences per response
+* **Style:** Natural, conversational spoken English
 * **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters, NO bullet points
-* **Readability:** This text goes directly to a Text-to-Speech engine - write for listening, not reading
-* **Numbers:** Spell out numbers (e.g., "twenty-four seven" not "24/7")
+* **Style:** Natural, conversational spoken English
+* **Formatting:** NO lists, NO markdown, NO asterisks, NO special characters, NO bullet points
+* **Readability:** This text goes to Text-to-Speech - write for listening, not reading
+* **Numbers:** Spell out numbers (e.g., "two PM" not "14:00")
 * **Pronunciation:** Use phonetically clear language
 
-### IMPORTANT
-If the search_hospital_knowledge function returns information, use it EXACTLY as provided. Do not say "I don't have that information" if the function returned results.
+### EXAMPLES
+❌ WRONG: "You have chest pain, go to emergency immediately"
+✅ RIGHT: "I can help you book a Cardiology appointment for your chest pain. Which doctor would you prefer?"
+
+❌ WRONG: "Let me check if we have that information" [without calling tool]
+✅ RIGHT: [Calls search_hospital_knowledge then provides answer]
 """
 
     agent = Agent(
