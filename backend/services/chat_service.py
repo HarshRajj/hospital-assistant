@@ -127,6 +127,7 @@ class ChatService:
         
         function_name = tool_call.function.name
         args = json.loads(tool_call.function.arguments)
+        print(f"🔧 Executing tool: {function_name} with args: {args}")
         
         if function_name == "search_hospital_knowledge":
             query = args.get("query", "")
@@ -147,6 +148,7 @@ class ChatService:
                 date=args.get("date"),
                 time=args.get("time")
             )
+            print(f"📅 Booking result: {result}")
             
             if result["success"]:
                 return result["message"]
@@ -212,6 +214,7 @@ class ChatService:
                 # Check if LLM wants to call a function
                 if response_message.tool_calls:
                     tool_used = True
+                    print(f"🤖 LLM wants to call {len(response_message.tool_calls)} tool(s)")
                     
                     # Add assistant's tool call request to messages
                     messages.append(response_message)
@@ -232,6 +235,7 @@ class ChatService:
                     continue
                 
                 # No more tool calls - we have the final response
+                print(f"✅ Final response (tool_used={tool_used}): {response_message.content[:100]}...")
                 return {
                     "response": response_message.content,
                     "context_used": tool_used,

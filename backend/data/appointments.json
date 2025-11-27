@@ -36,7 +36,7 @@
       "doctor": "Dr. Sameer Khan",
       "date": "2025-11-27",
       "time": "10:00",
-      "status": "confirmed",
+      "status": "cancelled",
       "created_at": "2025-11-26T22:38:36.649707"
     },
     "APT-20251126-0004": {
@@ -51,8 +51,34 @@
       "time": "09:30",
       "status": "cancelled",
       "created_at": "2025-11-26T22:38:38.335813"
+    },
+    "APT-20251127-0005": {
+      "id": "APT-20251127-0005",
+      "user_id": "demo_user",
+      "patient_name": "John Doe",
+      "patient_age": 25,
+      "patient_gender": "Male",
+      "department": "Cardiology",
+      "doctor": "Dr. Harsh Sharma",
+      "date": "2025-11-28",
+      "time": "11:00",
+      "status": "cancelled",
+      "created_at": "2025-11-27T10:51:37.342799"
+    },
+    "APT-20251127-0006": {
+      "id": "APT-20251127-0006",
+      "user_id": "demo_user",
+      "patient_name": "Harsh",
+      "patient_age": 21,
+      "patient_gender": "Male",
+      "department": "Dermatology",
+      "doctor": "Dr. Meera Desai",
+      "date": "2025-11-27",
+      "time": "12:00",
+      "status": "confirmed",
+      "created_at": "2025-11-27T10:59:47.953990"
     }
   },
-  "counter": 4,
-  "last_updated": "2025-11-26T22:51:53.331054"
+  "counter": 6,
+  "last_updated": "2025-11-27T11:00:04.418414"
 }
