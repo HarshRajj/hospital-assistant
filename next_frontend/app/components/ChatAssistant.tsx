@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
@@ -11,10 +12,11 @@ interface Message {
 }
 
 export default function ChatAssistant() {
+  const { getToken } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm the hospital chat assistant. Ask me about departments, doctors, visiting hours, or any hospital information.",
+      content: "Hello! I'm the hospital chat assistant. Ask me about departments, doctors, visiting hours, or any hospital information or book appointment with any doctor or department.",
       timestamp: new Date(),
     },
   ]);
@@ -50,10 +52,13 @@ export default function ChatAssistant() {
     setIsLoading(true);
 
     try {
+      const token = await getToken();
+      
       const response = await fetch(`${BACKEND_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ 
           message: input,

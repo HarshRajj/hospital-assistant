@@ -130,6 +130,12 @@ class AppointmentService:
         if patient_gender not in ["Male", "Female", "Other"]:
             return {"success": False, "error": "Gender must be Male, Female, or Other"}
         
+        # Check if user already has an appointment on this date
+        existing_on_date = [
+            apt for apt in self.appointments.values()
+            if apt.user_id == user_id and apt.date == date and apt.status == "confirmed"
+        ]
+        
         # Create and save appointment
         self._counter += 1
         apt_id = f"APT-{datetime.now().strftime('%Y%m%d')}-{self._counter:04d}"
@@ -144,8 +150,13 @@ class AppointmentService:
         self.appointments[apt_id] = appointment
         self._save_to_file()
         
-        return {"success": True, "appointment": appointment.model_dump(),
-                "message": f"Booked {patient_name} with {doctor} on {date} at {time}"}
+        # Add note if multiple appointments on same day
+        message = f"Booked {patient_name} with {doctor} on {date} at {time}"
+        if existing_on_date:
+            existing_details = ", ".join([f"{apt.doctor} at {apt.time}" for apt in existing_on_date])
+            message += f". Note: You already have appointment(s) on this date with {existing_details}"
+        
+        return {"success": True, "appointment": appointment.model_dump(), "message": message}
     
     def get_user_appointments(self, user_id: str) -> List[Dict]:
         """Get all appointments for a user."""
@@ -153,6 +164,14 @@ class AppointmentService:
         apts = [apt.model_dump() for apt in self.appointments.values()
                 if apt.user_id == user_id and apt.status == "confirmed"]
         apts.sort(key=lambda x: (x["date"], x["time"]))
+        return apts
+    
+    def get_user_appointments_on_date(self, user_id: str, date: str) -> List[Dict]:
+        """Get user's appointments on a specific date."""
+        self._load_from_file()
+        apts = [apt.model_dump() for apt in self.appointments.values()
+                if apt.user_id == user_id and apt.date == date and apt.status == "confirmed"]
+        apts.sort(key=lambda x: x["time"])
         return apts
     
     def cancel_appointment(self, appointment_id: str, user_id: str) -> Dict:

@@ -98,6 +98,25 @@ CHECK_SLOTS_TOOL = {
     }
 }
 
+# Check user's existing appointments on a date
+CHECK_USER_APPOINTMENTS_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "check_user_appointments_on_date",
+        "description": "Check if user already has appointments on a specific date. Call this before booking to inform user if they have existing appointments.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string",
+                    "description": "Date to check in YYYY-MM-DD format"
+                }
+            },
+            "required": ["date"]
+        }
+    }
+}
+
 
 class ChatService:
     """Service for text-based chat with RAG-powered hospital knowledge using function calling."""
@@ -137,9 +156,9 @@ class ChatService:
                 return "Knowledge base is not available. Please contact the information desk."
         
         elif function_name == "book_appointment":
-            # Book appointment using demo user
+            # Book appointment using the authenticated user's ID
             result = appointment_service.book_appointment(
-                user_id="demo_user",
+                user_id=getattr(self, '_current_user_id', 'demo_user'),
                 patient_name=args.get("patient_name"),
                 patient_age=args.get("patient_age"),
                 patient_gender=args.get("patient_gender"),
@@ -167,24 +186,39 @@ class ChatService:
             else:
                 return f"No available slots on {args.get('date')} with {args.get('doctor')} in {args.get('department')}. Please try another date."
         
+        elif function_name == "check_user_appointments_on_date":
+            user_id = getattr(self, '_current_user_id', 'demo_user')
+            existing = appointment_service.get_user_appointments_on_date(user_id, args.get("date"))
+            
+            if existing:
+                appointments_text = ", ".join([f"{apt['doctor']} at {apt['time']}" for apt in existing])
+                return f"You already have {len(existing)} appointment(s) on {args.get('date')}: {appointments_text}. You can still book another appointment on the same day if you'd like."
+            else:
+                return f"You don't have any appointments on {args.get('date')}."
+        
         return "Unknown tool"
     
     async def chat(
         self,
         message: str,
-        conversation_history: List[Dict[str, str]] = None
+        conversation_history: List[Dict[str, str]] = None,
+        user_id: str = "demo_user"
     ) -> Dict[str, str]:
         """Process a chat message with RAG function calling.
         
         Args:
             message: User's message
             conversation_history: Optional list of previous messages
+            user_id: Authenticated user's ID for booking appointments
             
         Returns:
             Dictionary with response, context usage, and model info
         """
         if conversation_history is None:
             conversation_history = []
+        
+        # Store user_id for tool execution
+        self._current_user_id = user_id
         
         # Build messages for LLM with fresh timestamp
         messages = [{"role": "system", "content": self._get_system_prompt()}]
@@ -203,7 +237,7 @@ class ChatService:
                 response = self.client.chat.completions.create(
                     model=self.model,
                     messages=messages,
-                    tools=[RAG_TOOL, APPOINTMENT_TOOL, CHECK_SLOTS_TOOL],
+                    tools=[RAG_TOOL, APPOINTMENT_TOOL, CHECK_SLOTS_TOOL, CHECK_USER_APPOINTMENTS_TOOL],
                     tool_choice="auto",
                     temperature=0.3,
                     max_tokens=500,
