@@ -62,6 +62,17 @@ async def check_available_slots(department: str, doctor: str, date: str) -> str:
     return f"No slots on {date}. Try another date?"
 
 
+@llm.function_tool
+async def check_existing_appointments(date: str) -> str:
+    """Check if user has existing appointments on a date. Args: date (YYYY-MM-DD)."""
+    existing = appointment_service.get_user_appointments_on_date("demo_user", date)
+    
+    if existing:
+        details = ", ".join([f"{apt['doctor']} at {apt['time']}" for apt in existing])
+        return f"You have {len(existing)} appointment(s) on {date}: {details}. Want to book another?"
+    return f"No appointments on {date}."
+
+
 async def entrypoint(ctx: JobContext):
     """Voice agent entrypoint - connects to room and starts the agent."""
     
@@ -94,7 +105,7 @@ Only suggest emergency if they say "emergency" or "urgent help now".
             base_url="https://api.cerebras.ai/v1"
         ),  # Cerebras via OpenAI SDK for function calling support
         tts=cartesia.TTS(voice="6ccbfb76-1fc6-48f7-b71d-91ac6298247b"),  # Female voice
-        tools=[search_hospital_knowledge, book_appointment, check_available_slots],
+        tools=[search_hospital_knowledge, book_appointment, check_available_slots, check_existing_appointments],
     )
 
     session = AgentSession()

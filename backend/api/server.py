@@ -13,13 +13,31 @@ from config import settings
 from services.token_service import token_service
 from services.chat_service import chat_service
 from services.appointment_service import appointment_service
+import jwt
 
 
-# Inline auth - simple token check
+# Inline auth - decode Clerk JWT to get user_id
 async def verify_token(authorization: Optional[str] = Header(None)) -> dict:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(401, "Authentication required")
-    return {"authenticated": True}
+    
+    token = authorization.replace("Bearer ", "")
+    
+    # For demo/test tokens, use demo_user
+    if token == "test" or token == "demo":
+        return {"authenticated": True, "user_id": "demo_user"}
+    
+    # Decode Clerk JWT to get user_id
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        user_id = decoded.get("sub")
+        
+        if not user_id:
+            raise HTTPException(401, "Invalid token: no user ID")
+        
+        return {"authenticated": True, "user_id": user_id}
+    except Exception as e:
+        raise HTTPException(401, f"Invalid token: {str(e)}")
 
 
 # Request/Response models
@@ -82,11 +100,12 @@ async def connect(_: dict = Depends(verify_token)):
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """Chat with RAG support."""
+async def chat(request: ChatRequest, user: dict = Depends(verify_token)):
+    """Chat with RAG support (auth required)."""
     try:
         history = [{"role": m.role, "content": m.content} for m in request.conversation_history] if request.conversation_history else None
-        return ChatResponse(**await chat_service.chat(request.message, history))
+        user_id = user.get("user_id", "demo_user")
+        return ChatResponse(**await chat_service.chat(request.message, history, user_id))
     except Exception as e:
         raise HTTPException(500, f"Chat error: {e}")
 
@@ -103,16 +122,18 @@ async def get_available_slots(date: str, department: str, doctor: str):
 
 
 @app.get("/appointments/my")
-async def get_my_appointments(_: dict = Depends(verify_token)):
+async def get_my_appointments(user: dict = Depends(verify_token)):
     """Get user's appointments (auth required)."""
-    return {"appointments": appointment_service.get_user_appointments("demo_user")}
+    user_id = user.get("user_id", "demo_user")
+    return {"appointments": appointment_service.get_user_appointments(user_id)}
 
 
 @app.post("/appointments/book")
-async def book_appointment(request: BookAppointmentRequest, _: dict = Depends(verify_token)):
+async def book_appointment(request: BookAppointmentRequest, user: dict = Depends(verify_token)):
     """Book appointment (auth required)."""
+    user_id = user.get("user_id", "demo_user")
     result = appointment_service.book_appointment(
-        "demo_user", request.patient_name, request.patient_age, request.patient_gender,
+        user_id, request.patient_name, request.patient_age, request.patient_gender,
         request.department, request.doctor, request.date, request.time
     )
     if not result["success"]:
@@ -121,9 +142,10 @@ async def book_appointment(request: BookAppointmentRequest, _: dict = Depends(ve
 
 
 @app.delete("/appointments/{appointment_id}")
-async def cancel_appointment(appointment_id: str, _: dict = Depends(verify_token)):
+async def cancel_appointment(appointment_id: str, user: dict = Depends(verify_token)):
     """Cancel appointment (auth required)."""
-    result = appointment_service.cancel_appointment(appointment_id, "demo_user")
+    user_id = user.get("user_id", "demo_user")
+    result = appointment_service.cancel_appointment(appointment_id, user_id)
     if not result["success"]:
         raise HTTPException(400, result["error"])
     return result
