@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 from pydantic import BaseModel
+import jwt
 
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
@@ -14,65 +15,45 @@ from config.doctors import is_doctor, get_doctor_name_from_email
 from services.token_service import token_service
 from services.chat_service import chat_service
 from services.appointment_service import appointment_service
-import jwt
-import httpx
 
 
-# Inline auth - decode Clerk JWT to get user_id and email from header
 async def verify_token(
     authorization: Optional[str] = Header(None),
     x_user_email: Optional[str] = Header(None, alias="X-User-Email")
 ) -> dict:
+    """Verify Clerk JWT and extract user info."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(401, "Authentication required")
     
     token = authorization.replace("Bearer ", "")
+    if token in ("test", "demo"):
+        return {"user_id": "demo_user", "email": ""}
     
-    # For demo/test tokens, use demo_user
-    if token == "test" or token == "demo":
-        return {"authenticated": True, "user_id": "demo_user", "email": ""}
-    
-    # Decode Clerk JWT to get user_id
     try:
         decoded = jwt.decode(token, options={"verify_signature": False})
         user_id = decoded.get("sub")
-        
         if not user_id:
-            raise HTTPException(401, "Invalid token: no user ID")
-        
-        # Get email from header (passed from frontend) - ensure it's a string
+            raise HTTPException(401, "Invalid token")
         email = str(x_user_email).lower().strip() if x_user_email else ""
-        
-        print(f"🔑 JWT decoded - user_id: {user_id}, email: '{email}'")
-        
-        return {"authenticated": True, "user_id": user_id, "email": email}
+        return {"user_id": user_id, "email": email}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(401, f"Invalid token: {str(e)}")
+        raise HTTPException(401, f"Invalid token: {e}")
 
 
-# Doctor auth - verify user is a doctor
 async def verify_doctor(
     authorization: Optional[str] = Header(None),
     x_user_email: Optional[str] = Header(None, alias="X-User-Email")
 ) -> dict:
-    # Get email value as string
-    email_str = str(x_user_email) if x_user_email else ""
-    
-    # Call verify_token with proper parameters
-    user = await verify_token(authorization, email_str)
+    """Verify user is a registered doctor."""
+    user = await verify_token(authorization, str(x_user_email) if x_user_email else "")
     email = user.get("email", "").lower().strip()
     
-    print(f"🔐 Verifying doctor access for email: '{email}'")
-    
     if not is_doctor(email):
-        print(f"❌ Access denied - '{email}' is not a registered doctor")
-        raise HTTPException(403, "Access denied. Doctor credentials required.")
+        raise HTTPException(403, "Doctor credentials required")
     
-    doctor_name = get_doctor_name_from_email(email)
-    print(f"✅ Doctor verified: {doctor_name} ({email})")
-    return {**user, "doctor_name": doctor_name, "is_doctor": True}
+    return {**user, "doctor_name": get_doctor_name_from_email(email)}
 
 
 # Request/Response models
@@ -162,33 +143,23 @@ async def get_available_slots(date: str, department: str, doctor: str):
 
 @app.get("/appointments/my")
 async def get_my_appointments(user: dict = Depends(verify_token)):
-    """Get user's appointments (auth required)."""
-    user_id = user.get("user_id", "demo_user")
-    appointments = appointment_service.get_user_appointments(user_id)
-    print(f"📋 Fetching appointments for user {user_id}: {len(appointments)} found")
-    return {"appointments": appointments}
+    return {"appointments": appointment_service.get_user_appointments(user.get("user_id", "demo_user"))}
 
 
 @app.post("/appointments/book")
 async def book_appointment(request: BookAppointmentRequest, user: dict = Depends(verify_token)):
-    """Book appointment (auth required)."""
-    user_id = user.get("user_id", "demo_user")
-    print(f"📅 Booking appointment for user {user_id}: {request.patient_name}")
     result = appointment_service.book_appointment(
-        user_id, request.patient_name, request.patient_age, request.patient_gender,
-        request.department, request.doctor, request.date, request.time
+        user.get("user_id", "demo_user"), request.patient_name, request.patient_age,
+        request.patient_gender, request.department, request.doctor, request.date, request.time
     )
     if not result["success"]:
         raise HTTPException(400, result["error"])
-    print(f"✅ Appointment booked successfully: {result.get('appointment', {}).get('id')}")
     return result
 
 
 @app.delete("/appointments/{appointment_id}")
 async def cancel_appointment(appointment_id: str, user: dict = Depends(verify_token)):
-    """Cancel appointment (auth required)."""
-    user_id = user.get("user_id", "demo_user")
-    result = appointment_service.cancel_appointment(appointment_id, user_id)
+    result = appointment_service.cancel_appointment(appointment_id, user.get("user_id", "demo_user"))
     if not result["success"]:
         raise HTTPException(400, result["error"])
     return result
@@ -196,37 +167,22 @@ async def cancel_appointment(appointment_id: str, user: dict = Depends(verify_to
 
 @app.get("/appointments/doctor/today")
 async def get_doctor_today_appointments(doctor: dict = Depends(verify_doctor)):
-    """Get today's appointments for the logged-in doctor."""
-    doctor_name = doctor.get("doctor_name")
-    print(f"📅 Fetching today's appointments for: {doctor_name}")
-    appointments = appointment_service.get_doctor_appointments_today(doctor_name)
-    print(f"✅ Found {len(appointments)} appointments for {doctor_name} today")
+    appointments = appointment_service.get_doctor_appointments_today(doctor["doctor_name"])
     return {"appointments": appointments, "count": len(appointments)}
 
 
 @app.get("/appointments/doctor/all")
 async def get_doctor_all_appointments(doctor: dict = Depends(verify_doctor)):
-    """Get all appointments for the logged-in doctor."""
-    doctor_name = doctor.get("doctor_name")
-    print(f"📋 Fetching all appointments for: {doctor_name}")
-    appointments = appointment_service.get_doctor_all_appointments(doctor_name)
-    print(f"✅ Found {len(appointments)} total appointments for {doctor_name}")
+    appointments = appointment_service.get_doctor_all_appointments(doctor["doctor_name"])
     return {"appointments": appointments, "count": len(appointments)}
 
 
 @app.get("/appointments/doctor/past-week")
 async def get_doctor_past_week_appointments(doctor: dict = Depends(verify_doctor)):
-    """Get past week's appointments for the logged-in doctor."""
-    doctor_name = doctor.get("doctor_name")
-    print(f"📊 Fetching past week appointments for: {doctor_name}")
-    appointments = appointment_service.get_doctor_past_week_appointments(doctor_name)
-    print(f"✅ Found {len(appointments)} appointments in past week for {doctor_name}")
+    appointments = appointment_service.get_doctor_past_week_appointments(doctor["doctor_name"])
     return {"appointments": appointments, "count": len(appointments)}
 
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Starting Hospital Voice Assistant API...")
-    print(f"📍 API will be available at: http://{settings.API_HOST}:{settings.API_PORT}")
-    print(f"🔗 LiveKit URL: {settings.LIVEKIT_URL}")
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT)
