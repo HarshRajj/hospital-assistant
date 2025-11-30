@@ -8,6 +8,9 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import Link from "next/link";
+import DoctorNav from "./components/DoctorNav";
+import DoctorRedirect from "./components/DoctorRedirect";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,10 +41,10 @@ export default function RootLayout({
         >
           <header className="border-b border-gray-200 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-              <div className="text-xl font-bold text-gray-900">
+              <Link href="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
                 Arogya Med-City
-              </div>
-              <div className="flex items-center gap-4">
+              </Link>
+              <div className="flex items-center gap-6">
                 <SignedOut>
                   <SignInButton mode="modal">
                     <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900">
@@ -55,6 +58,8 @@ export default function RootLayout({
                   </SignUpButton>
                 </SignedOut>
                 <SignedIn>
+                  <DoctorRedirect />
+                  <DoctorNav />
                   <UserButton afterSignOutUrl="/" />
                 </SignedIn>
               </div>

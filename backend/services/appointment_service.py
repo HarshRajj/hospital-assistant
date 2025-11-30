@@ -39,7 +39,7 @@ class AppointmentService:
     }
     
     TIME_SLOTS = [
-        "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+        "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
         "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
         "15:00", "15:30", "16:00", "16:30", "17:00"
     ]
@@ -198,6 +198,40 @@ class AppointmentService:
     def get_departments(self) -> Dict[str, List[str]]:
         """Get all departments with their doctors."""
         return self.DEPARTMENTS.copy()
+    
+    def get_doctor_appointments_today(self, doctor_name: str) -> List[Dict]:
+        """Get today's appointments for a specific doctor."""
+        self._load_from_file()
+        today = datetime.now().date().isoformat()
+        
+        apts = [apt.model_dump() for apt in self.appointments.values()
+                if apt.doctor == doctor_name and apt.date == today and apt.status == "confirmed"]
+        apts.sort(key=lambda x: x["time"])
+        return apts
+    
+    def get_doctor_all_appointments(self, doctor_name: str) -> List[Dict]:
+        """Get all future appointments for a specific doctor."""
+        self._load_from_file()
+        today = datetime.now().date().isoformat()
+        
+        apts = [apt.model_dump() for apt in self.appointments.values()
+                if apt.doctor == doctor_name and apt.date >= today and apt.status == "confirmed"]
+        apts.sort(key=lambda x: (x["date"], x["time"]))
+        return apts
+    
+    def get_doctor_past_week_appointments(self, doctor_name: str) -> List[Dict]:
+        """Get past week's appointments for a specific doctor."""
+        from datetime import timedelta
+        
+        self._load_from_file()
+        today = datetime.now().date()
+        week_ago = (today - timedelta(days=7)).isoformat()
+        today_str = today.isoformat()
+        
+        apts = [apt.model_dump() for apt in self.appointments.values()
+                if apt.doctor == doctor_name and week_ago <= apt.date <= today_str and apt.status == "confirmed"]
+        apts.sort(key=lambda x: (x["date"], x["time"]), reverse=True)
+        return apts
 
 
 appointment_service = AppointmentService()
