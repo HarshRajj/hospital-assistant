@@ -225,13 +225,14 @@ class ChatService:
         messages.extend(conversation_history)
         messages.append({"role": "user", "content": message})
         
-        max_iterations = 5  # Prevent infinite loops
+        max_iterations = 10  # Prevent infinite loops (increased for complex queries)
         iteration = 0
         tool_used = False
         
         try:
             while iteration < max_iterations:
                 iteration += 1
+                print(f"🔄 Iteration {iteration}/{max_iterations}")
                 
                 # Call LLM with function calling
                 response = self.client.chat.completions.create(
@@ -240,7 +241,7 @@ class ChatService:
                     tools=[RAG_TOOL, APPOINTMENT_TOOL, CHECK_SLOTS_TOOL, CHECK_USER_APPOINTMENTS_TOOL],
                     tool_choice="auto",
                     temperature=0.3,
-                    max_tokens=500,
+                    max_tokens=800,
                 )
                 
                 response_message = response.choices[0].message
@@ -276,9 +277,10 @@ class ChatService:
                     "model": self.model
                 }
             
-            # Max iterations reached
+            # Max iterations reached - provide helpful fallback
+            print(f"⚠️ Max iterations ({max_iterations}) reached")
             return {
-                "response": "I apologize, but I'm having trouble processing your request. Please try rephrasing your question.",
+                "response": "I understand your question, but I need a bit more clarity. Could you please:\n\n• Be more specific about what you need\n• Ask one question at a time\n• Rephrase your request\n\nI'm here to help with hospital information and appointment bookings!",
                 "context_used": tool_used,
                 "model": self.model
             }

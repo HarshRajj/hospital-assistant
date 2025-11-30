@@ -67,7 +67,8 @@ export default function ChatAssistant() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get response");
+        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
+        throw new Error(errorData.detail || `Server error: ${response.status}`);
       }
 
       const data = await response.json();

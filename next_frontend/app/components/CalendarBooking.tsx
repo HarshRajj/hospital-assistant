@@ -84,13 +84,26 @@ export default function CalendarBooking() {
   const fetchMyAppointments = async () => {
     try {
       const token = await getToken();
+      if (!token) {
+        console.log("No auth token available");
+        return;
+      }
+      
+      console.log("📡 Fetching my appointments...");
       const response = await fetch(`${BACKEND_URL}/appointments/my`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
         cache: 'no-store', // Prevent caching to always get fresh data
       });
+      
+      if (!response.ok) {
+        console.error("Failed to fetch appointments:", response.status);
+        return;
+      }
+      
       const data = await response.json();
+      console.log("✅ Appointments received:", data.appointments?.length || 0);
       setMyAppointments(data.appointments || []);
     } catch (error) {
       console.error("Failed to fetch appointments:", error);
@@ -134,6 +147,7 @@ export default function CalendarBooking() {
       const data = await response.json();
 
       if (response.ok) {
+        console.log("✅ Appointment booked successfully:", data);
         setMessage({ type: "success", text: data.message });
         // Reset form
         setPatientName("");
@@ -144,9 +158,10 @@ export default function CalendarBooking() {
         setSelectedDate("");
         setSelectedTime("");
         setAvailableSlots([]);
-        // Refresh appointments
-        fetchMyAppointments();
+        // Refresh appointments immediately
+        await fetchMyAppointments();
       } else {
+        console.error("❌ Booking failed:", data);
         setMessage({ type: "error", text: data.detail || "Failed to book appointment" });
       }
     } catch (error) {
