@@ -158,11 +158,25 @@ class AppointmentService:
         
         return {"success": True, "appointment": appointment.model_dump(), "message": message}
     
+    def _mark_expired_status(self, appointment: Dict) -> Dict:
+        """Mark appointment as expired if it's in the past."""
+        try:
+            apt_datetime = datetime.strptime(f"{appointment['date']} {appointment['time']}", "%Y-%m-%d %H:%M")
+            if apt_datetime < datetime.now():
+                appointment["status"] = "expired"
+        except ValueError:
+            pass
+        return appointment
+    
     def get_user_appointments(self, user_id: str) -> List[Dict]:
-        """Get all appointments for a user."""
+        """Get all appointments for a user with expired status for past ones."""
         self._load_from_file()
-        apts = [apt.model_dump() for apt in self.appointments.values()
-                if apt.user_id == user_id and apt.status == "confirmed"]
+        apts = []
+        for apt in self.appointments.values():
+            if apt.user_id == user_id and apt.status in ["confirmed", "expired"]:
+                apt_dict = apt.model_dump()
+                apt_dict = self._mark_expired_status(apt_dict)
+                apts.append(apt_dict)
         apts.sort(key=lambda x: (x["date"], x["time"]))
         return apts
     
@@ -204,8 +218,12 @@ class AppointmentService:
         self._load_from_file()
         today = datetime.now().date().isoformat()
         
-        apts = [apt.model_dump() for apt in self.appointments.values()
-                if apt.doctor == doctor_name and apt.date == today and apt.status == "confirmed"]
+        apts = []
+        for apt in self.appointments.values():
+            if apt.doctor == doctor_name and apt.date == today and apt.status in ["confirmed", "expired"]:
+                apt_dict = apt.model_dump()
+                apt_dict = self._mark_expired_status(apt_dict)
+                apts.append(apt_dict)
         apts.sort(key=lambda x: x["time"])
         return apts
     
@@ -228,8 +246,12 @@ class AppointmentService:
         week_ago = (today - timedelta(days=7)).isoformat()
         today_str = today.isoformat()
         
-        apts = [apt.model_dump() for apt in self.appointments.values()
-                if apt.doctor == doctor_name and week_ago <= apt.date <= today_str and apt.status == "confirmed"]
+        apts = []
+        for apt in self.appointments.values():
+            if apt.doctor == doctor_name and week_ago <= apt.date <= today_str and apt.status in ["confirmed", "expired"]:
+                apt_dict = apt.model_dump()
+                apt_dict = self._mark_expired_status(apt_dict)
+                apts.append(apt_dict)
         apts.sort(key=lambda x: (x["date"], x["time"]), reverse=True)
         return apts
 
