@@ -279,7 +279,7 @@ export default function CalendarBooking() {
               value={patientName}
               onChange={(e) => setPatientName(e.target.value)}
               placeholder="Enter patient's full name"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -293,7 +293,7 @@ export default function CalendarBooking() {
               placeholder="Enter age"
               min="0"
               max="150"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
             />
           </div>
 
@@ -303,7 +303,7 @@ export default function CalendarBooking() {
             <select
               value={patientGender}
               onChange={(e) => setPatientGender(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
             >
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
@@ -322,7 +322,7 @@ export default function CalendarBooking() {
                 setSelectedDoctor("");
                 setSelectedTime("");
               }}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
             >
               <option value="">Select Department</option>
               {Object.keys(departments).map((dept) => (
@@ -343,7 +343,7 @@ export default function CalendarBooking() {
                 setSelectedTime("");
               }}
               disabled={!selectedDepartment}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500"
             >
               <option value="">Select Doctor</option>
               {selectedDepartment &&
@@ -367,7 +367,7 @@ export default function CalendarBooking() {
               }}
               min={today}
               disabled={!selectedDoctor}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500"
             />
           </div>
 
@@ -380,7 +380,7 @@ export default function CalendarBooking() {
               value={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
               disabled={!selectedDate || availableSlots.length === 0}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-500"
             >
               <option value="">Select Time</option>
               {availableSlots.map((slot) => (
