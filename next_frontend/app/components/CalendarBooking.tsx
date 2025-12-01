@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
@@ -21,8 +21,37 @@ interface Appointment {
   status: string;
 }
 
+/**
+ * Extract a readable name from email address.
+ * Example: harsh.raj.cseiot.2022@miet.ac.in -> Harsh Raj
+ */
+function extractNameFromEmail(email: string): string {
+  if (!email || !email.includes("@")) return "";
+  
+  const localPart = email.split("@")[0];
+  const parts = localPart.split(".");
+  
+  // Filter out numbers and department codes
+  const skipCodes = ["cse", "cseiot", "ece", "eee", "mech", "civil", "it"];
+  const nameParts: string[] = [];
+  
+  for (const part of parts) {
+    // Skip if it's a number or contains mostly numbers
+    if (/^\d+$/.test(part)) continue;
+    if (/\d/.test(part) && part.length > 3) continue;
+    if (skipCodes.includes(part.toLowerCase())) continue;
+    
+    // Capitalize first letter
+    nameParts.push(part.charAt(0).toUpperCase() + part.slice(1).toLowerCase());
+  }
+  
+  // Take first 2 parts as name
+  return nameParts.slice(0, 2).join(" ");
+}
+
 export default function CalendarBooking() {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const [departments, setDepartments] = useState<Department>({});
   const [patientName, setPatientName] = useState<string>("");
   const [patientAge, setPatientAge] = useState<string>("");
@@ -35,6 +64,27 @@ export default function CalendarBooking() {
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Auto-fill patient name from Clerk user data
+  useEffect(() => {
+    if (user && !patientName) {
+      // Try to get name from Clerk user profile first
+      const fullName = user.fullName || `${user.firstName || ""} ${user.lastName || ""}`.trim();
+      
+      if (fullName) {
+        setPatientName(fullName);
+      } else {
+        // Fallback: extract name from email
+        const email = user.primaryEmailAddress?.emailAddress;
+        if (email) {
+          const extractedName = extractNameFromEmail(email);
+          if (extractedName) {
+            setPatientName(extractedName);
+          }
+        }
+      }
+    }
+  }, [user]);
 
   // Fetch departments on mount
   useEffect(() => {
@@ -149,8 +199,7 @@ export default function CalendarBooking() {
       if (response.ok) {
         console.log("✅ Appointment booked successfully:", data);
         setMessage({ type: "success", text: data.message });
-        // Reset form
-        setPatientName("");
+        // Reset form but keep patient name (auto-filled from account)
         setPatientAge("");
         setPatientGender("");
         setSelectedDepartment("");
@@ -221,7 +270,10 @@ export default function CalendarBooking() {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Patient Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Patient Name</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Patient Name
+              {user && <span className="text-xs text-green-600 ml-2">(auto-filled)</span>}
+            </label>
             <input
               type="text"
               value={patientName}
@@ -366,46 +418,63 @@ export default function CalendarBooking() {
           <p className="text-gray-500 text-center py-8">No appointments booked yet</p>
         ) : (
           <div className="space-y-4">
-            {myAppointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-blue-200 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-lg font-bold text-gray-900">{apt.patient_name}</span>
-                    <span className="text-sm text-gray-500">•</span>
-                    <span className="text-sm text-gray-600">{apt.patient_age} yrs, {apt.patient_gender}</span>
-                  </div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="font-medium text-blue-600">{apt.department}</span>
-                    <span className="text-sm text-gray-500">•</span>
-                    <span className="text-sm text-gray-600">{apt.doctor}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-2">
-                      📅 {new Date(apt.date).toLocaleDateString("en-US", { 
-                        weekday: "short", 
-                        month: "short", 
-                        day: "numeric" 
-                      })}
-                    </span>
-                    <span className="flex items-center gap-2">
-                      🕒 {apt.time}
-                    </span>
-                    <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
-                      {apt.status}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleCancelAppointment(apt.id)}
-                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            {myAppointments.map((apt) => {
+              const isExpired = apt.status === "expired";
+              return (
+                <div
+                  key={apt.id}
+                  className={`flex items-center justify-between p-6 border rounded-xl transition-colors ${
+                    isExpired 
+                      ? "border-gray-200 bg-gray-50 opacity-75" 
+                      : "border-gray-200 hover:border-blue-200"
+                  }`}
                 >
-                  Cancel
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className={`text-lg font-bold ${isExpired ? "text-gray-500" : "text-gray-900"}`}>
+                        {apt.patient_name}
+                      </span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-600">{apt.patient_age} yrs, {apt.patient_gender}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className={`font-medium ${isExpired ? "text-gray-500" : "text-blue-600"}`}>
+                        {apt.department}
+                      </span>
+                      <span className="text-sm text-gray-500">•</span>
+                      <span className="text-sm text-gray-600">{apt.doctor}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-2">
+                        📅 {new Date(apt.date).toLocaleDateString("en-US", { 
+                          weekday: "short", 
+                          month: "short", 
+                          day: "numeric" 
+                        })}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        🕒 {apt.time}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        isExpired 
+                          ? "bg-gray-100 text-gray-500" 
+                          : "bg-green-50 text-green-700"
+                      }`}>
+                        {apt.status}
+                      </span>
+                    </div>
+                  </div>
+                  {!isExpired && (
+                    <button
+                      onClick={() => handleCancelAppointment(apt.id)}
+                      className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

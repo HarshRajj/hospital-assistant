@@ -41,6 +41,7 @@ class Settings:
     
     # Cartesia Configuration
     CARTESIA_API_KEY: str = os.getenv("CARTESIA_API_KEY", "")
+    CARTESIA_VOICE: str = os.getenv("CARTESIA_VOICE", "")
     
     # Cerebras Configuration
     CEREBRAS_API_KEY: str = os.getenv("CEREBRAS_API_KEY", "")

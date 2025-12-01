@@ -326,16 +326,33 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
     });
   };
 
+  const isExpired = appointment.status === "expired";
+
   return (
-    <div className="flex items-center justify-between p-6 border border-gray-200 rounded-xl hover:border-blue-200 hover:bg-blue-50/30 transition-all">
+    <div className={`flex items-center justify-between p-6 border rounded-xl transition-all ${
+      isExpired 
+        ? "border-gray-200 bg-gray-50 opacity-75" 
+        : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
+    }`}>
       <div className="flex-1">
         <div className="flex items-center gap-4 mb-3">
-          <h3 className="text-lg font-bold text-gray-900">{appointment.patient_name}</h3>
-          <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+          <h3 className={`text-lg font-bold ${isExpired ? "text-gray-500" : "text-gray-900"}`}>
+            {appointment.patient_name}
+          </h3>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            isExpired ? "bg-gray-100 text-gray-500" : "bg-blue-50 text-blue-700"
+          }`}>
             {appointment.patient_age} yrs
           </span>
           <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
             {appointment.patient_gender}
+          </span>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            isExpired 
+              ? "bg-gray-200 text-gray-500" 
+              : "bg-green-50 text-green-700"
+          }`}>
+            {appointment.status}
           </span>
         </div>
         
@@ -360,7 +377,7 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
           <div className="text-xs text-gray-500">Appointment ID</div>
           <div className="text-sm font-mono text-gray-700">{appointment.id}</div>
         </div>
-        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        <div className={`w-2 h-2 rounded-full ${isExpired ? "bg-gray-400" : "bg-green-500"}`}></div>
       </div>
     </div>
   );

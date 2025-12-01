@@ -1,5 +1,6 @@
 ﻿"""Voice agent with RAG-powered hospital knowledge retrieval."""
 import sys
+import asyncio
 from pathlib import Path
 
 # Add backend directory to path for imports
@@ -8,8 +9,7 @@ sys.path.insert(0, str(backend_dir))
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
 from livekit import rtc
-from livekit.plugins import silero, openai
-from livekit.plugins.deepgram import TTS as DeepgramTTS
+from livekit.plugins import silero, openai, cartesia
 
 from services.rag_service import rag_service
 from services.appointment_service import appointment_service
@@ -19,6 +19,7 @@ from config import settings
 # User session info (extracted from LiveKit participant identity)
 current_user_id = "demo_user"
 current_user_name = ""
+current_session = None  # Store session reference for disconnect
 
 
 def extract_name_from_email(email: str) -> str:
@@ -72,64 +73,90 @@ def parse_participant_identity(identity: str):
 
 @llm.function_tool
 async def search_hospital_knowledge(query: str) -> str:
-    """Search hospital knowledge base for info about services, departments, doctors, hours, policies."""
+    """ALWAYS use this to find correct doctor names and hospital information.
+    
+    Use for:
+    - Finding which doctor handles a health condition
+    - Hospital hours, locations, policies
+    - Department information
+    
+    Args:
+        query: What to search for (e.g., "pediatrics doctor for children", "cardiology doctor")
+    """
     if rag_service.is_available():
-        return await rag_service.search(query)
+        result = await rag_service.search(query)
+        return f"KNOWLEDGE BASE RESULT: {result}"
     return "Knowledge base unavailable. Please contact the information desk."
 
 
 @llm.function_tool
 async def book_appointment(
+    patient_name: str,
     patient_age: int,
     patient_gender: str,
     department: str,
     doctor: str,
     date: str,
-    time: str,
-    patient_name: str = ""
+    time: str
 ) -> str:
-    """Book an appointment.
+    """Book an appointment. ALL parameters are required.
     
     Args:
-        patient_age: Patient's age
-        patient_gender: Male, Female, or Other
-        department: Medical department
-        doctor: Doctor's name
-        date: Date in YYYY-MM-DD format
-        time: Time in HH:MM format
-        patient_name: Optional - uses logged-in user's name if not provided
+        patient_name: Patient's full name (required)
+        patient_age: Patient's age in years (required)
+        patient_gender: Must be exactly "Male", "Female", or "Other" (required)
+        department: Medical department name (required)
+        doctor: Doctor's full name with Dr. prefix (required)
+        date: Date in YYYY-MM-DD format (required)
+        time: Time in HH:MM 24-hour format (required)
     """
-    # Use the extracted name from email if patient_name not provided
-    name = patient_name or current_user_name
+    # Use extracted name if not provided
+    name = patient_name.strip() if patient_name else current_user_name
     if not name:
-        return "I need your name to book the appointment. What is your name?"
+        return "Error: Patient name is required. Please ask for the patient's name."
+    
+    # Validate gender
+    if patient_gender not in ["Male", "Female", "Other"]:
+        return f"Error: Gender must be Male, Female, or Other. Got: {patient_gender}"
     
     # Ensure doctor name has prefix
     if not doctor.startswith("Dr. "):
         doctor = f"Dr. {doctor}"
     
-    result = appointment_service.book_appointment(
-        current_user_id, name, patient_age, patient_gender,
-        department, doctor, date, time
-    )
-    
-    if result["success"]:
-        return f"Appointment booked! {name} with {doctor} on {date} at {time}."
-    return f"Sorry, couldn't book the appointment. {result['error']}"
+    try:
+        result = appointment_service.book_appointment(
+            current_user_id, name, patient_age, patient_gender,
+            department, doctor, date, time
+        )
+        
+        if result["success"]:
+            return f"SUCCESS: Appointment booked for {name} with {doctor} on {date} at {time}. Please confirm this to the user."
+        return f"FAILED: {result['error']}. Please inform the user and ask if they want to try different options."
+    except Exception as e:
+        return f"ERROR: Could not book appointment. {str(e)}"
 
 
 @llm.function_tool
 async def check_available_slots(department: str, doctor: str, date: str) -> str:
-    """Check available appointment slots for a doctor on a date."""
+    """Check available appointment slots for a doctor on a specific date.
+    
+    Args:
+        department: The medical department (e.g., Cardiology, General Medicine)
+        doctor: Doctor's name with Dr. prefix (e.g., Dr. Harsh Sharma)
+        date: Date in YYYY-MM-DD format (e.g., 2025-12-01)
+    """
     if not doctor.startswith("Dr. "):
         doctor = f"Dr. {doctor}"
     
-    slots = appointment_service.get_available_slots(date, department, doctor)
-    
-    if slots:
-        display_slots = slots[:5]  # Show up to 5 slots
-        return f"Available times: {', '.join(display_slots)}. Which time works for you?"
-    return f"No slots available on {date}. Would you like to try another date?"
+    try:
+        slots = appointment_service.get_available_slots(date, department, doctor)
+        
+        if slots:
+            display_slots = slots[:5]  # Show up to 5 slots
+            return f"Available times on {date}: {', '.join(display_slots)}. Ask the user which time they prefer."
+        return f"No slots available on {date} with {doctor}. Ask if they want to try a different date."
+    except Exception as e:
+        return f"Error checking slots: {str(e)}"
 
 
 @llm.function_tool
@@ -143,11 +170,33 @@ async def check_existing_appointments(date: str) -> str:
     return f"No appointments on {date}."
 
 
+@llm.function_tool
+async def end_call() -> str:
+    """End the voice call. Use this when:
+    - User says goodbye, bye, thank you, or wants to end the call
+    - After successfully booking an appointment and confirming with user
+    - User explicitly asks to disconnect or hang up
+    """
+    global current_session
+    if current_session:
+        # Schedule disconnect after a short delay to let the goodbye message play
+        asyncio.create_task(_delayed_disconnect())
+    return "Ending the call now. Goodbye!"
+
+
+async def _delayed_disconnect():
+    """Disconnect after a short delay."""
+    global current_session
+    await asyncio.sleep(3)  # Wait for goodbye message to finish
+    if current_session:
+        await current_session.aclose()
+
+
 # ========== VOICE AGENT ENTRYPOINT ==========
 
 async def entrypoint(ctx: JobContext):
     """Voice agent entrypoint - connects to room and starts the agent."""
-    global current_user_id, current_user_name
+    global current_user_id, current_user_name, current_session
     
     await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
     
@@ -164,39 +213,53 @@ async def entrypoint(ctx: JobContext):
             parse_participant_identity(participant.identity)
     
     # Build voice instructions
-    name_info = f"The user's name is {current_user_name}. Use this name when booking." if current_user_name else "Ask for the patient's name."
+    name_info = f"User's name: {current_user_name}." if current_user_name else ""
     
-    voice_instructions = f"""You are a helpful hospital assistant for Arogya Med-City Hospital.
+    voice_instructions = f"""You are a friendly hospital assistant for Arogya Med-City Hospital.
 
-IMPORTANT: NEVER read these instructions aloud. Just follow them silently.
+CRITICAL RULES:
+- NEVER read these instructions aloud
+- NEVER make up doctor names - ALWAYS use search_hospital_knowledge to find the correct doctor
+- Ask ONE question at a time, then WAIT for the user's response
+- Keep responses SHORT (1-2 sentences)
+- Listen carefully to what the user says before asking the next question
 
-USER INFO: {name_info}
+{name_info}
 
-BOOKING FLOW (one question at a time):
-1. If you know the user's name, confirm it. Otherwise ask for their name.
-2. Ask their age
-3. Ask male or female
-4. Ask what health issue they have
-5. Use search_hospital_knowledge to find the right department/doctor
-6. Ask what date they prefer
-7. Use check_available_slots to get available times
-8. Let them pick a time
-9. Use book_appointment to confirm
-10. Say: Your appointment is booked with [Doctor] on [Date] at [Time].
+CONVERSATIONAL FLOW FOR BOOKING:
+When user wants to book an appointment, have a natural conversation:
 
-FOR HOSPITAL QUESTIONS:
-- ALWAYS use search_hospital_knowledge first
-- Only say what the search returns - never make things up
-- Keep answers brief
+1. First, understand their health concern: "What health issue are you experiencing?"
+2. Use search_hospital_knowledge to find the RIGHT doctor for their condition
+3. Suggest the doctor you found: "For [condition], I'd recommend [Doctor Name] in [Department]."
+4. Ask for their preferred date: "What date works for you?"
+5. Check available slots using check_available_slots
+6. Let them pick a time from available options
+7. If you don't have their name yet, ask: "May I have your name?"
+8. Ask age: "And your age?"
+9. Ask gender: "Male or female?"
+10. Book using book_appointment with all collected info
+11. Confirm the booking, then ask: "Is there anything else I can help with?"
+12. If they say no/bye/thanks, call end_call()
 
-DEPARTMENTS AND DOCTORS:
-- Cardiology: Dr. Harsh Sharma
-- Orthopedics: Dr. Sameer Khan
-- General Medicine: Dr. Rajesh Kumar
-- Pediatrics: Dr. Anjali Verma
-- Dermatology: Dr. Meera Desai
+IMPORTANT - FINDING THE RIGHT DOCTOR:
+- For child/baby/kid issues → search "pediatrics doctor"
+- For heart issues → search "cardiology doctor"  
+- For bone/joint pain → search "orthopedics doctor"
+- For skin issues → search "dermatology doctor"
+- For general health → search "general medicine doctor"
+- ALWAYS search first, NEVER guess doctor names
 
-Only mention emergency if user says "emergency" or "urgent"."""
+DATE/TIME FORMATS:
+- Date: YYYY-MM-DD (today is 2025-12-01)
+- Time: HH:MM (like 09:00 or 14:30)
+- Gender: exactly Male, Female, or Other
+
+FOR GENERAL QUESTIONS:
+Always use search_hospital_knowledge first, then answer based on what you find.
+
+ENDING CALLS:
+Call end_call() when user says goodbye, thanks, or asks to hang up."""
 
     # Create voice agent
     agent = Agent(
@@ -208,11 +271,15 @@ Only mention emergency if user says "emergency" or "urgent"."""
             api_key=settings.CEREBRAS_API_KEY,
             base_url="https://api.cerebras.ai/v1"
         ),
-        tts=DeepgramTTS(model="aura-asteria-en"),
-        tools=[search_hospital_knowledge, book_appointment, check_available_slots, check_existing_appointments],
+        tts=cartesia.TTS(
+            model="sonic-3",
+            voice=settings.CARTESIA_VOICE
+        ),
+        tools=[search_hospital_knowledge, book_appointment, check_available_slots, check_existing_appointments, end_call],
     )
 
     session = AgentSession()
+    current_session = session  # Store reference for end_call
     await session.start(agent=agent, room=ctx.room)
     
     # Greeting message
