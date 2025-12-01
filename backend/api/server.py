@@ -8,13 +8,19 @@ import jwt
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from config import settings
 from config.doctors import is_doctor, get_doctor_name_from_email
 from services.token_service import token_service
 from services.chat_service import chat_service
 from services.appointment_service import appointment_service
+
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
 
 
 async def verify_token(
@@ -85,6 +91,10 @@ class BookAppointmentRequest(BaseModel):
 
 app = FastAPI(title="Hospital Voice Assistant API")
 
+# Add rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS configuration - allow Next.js frontend
 app.add_middleware(
     CORSMiddleware,
@@ -108,49 +118,58 @@ async def health():
 
 
 @app.post("/connect")
-async def connect(user: dict = Depends(verify_token)):
-    """Generate LiveKit token (auth required)."""
+@limiter.limit("10/minute")
+async def connect(request: Request, user: dict = Depends(verify_token)):
+    """Generate LiveKit token (auth required). Rate limited: 10/min"""
     if not token_service.is_configured():
         raise HTTPException(500, "LiveKit not configured")
     user_id = user.get("user_id", "demo_user")
     email = user.get("email", "")
-    # Pass both user_id and email separated by | for voice agent to extract name
     identity = f"{user_id}|{email}" if email else user_id
     return token_service.generate_connection(identity=identity, name="Hospital Visitor")
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, user: dict = Depends(verify_token)):
-    """Chat with RAG support (auth required)."""
+@limiter.limit("30/minute")
+async def chat(request: Request, chat_request: ChatRequest, user: dict = Depends(verify_token)):
+    """Chat with RAG support (auth required). Rate limited: 30/min"""
     try:
-        history = [{"role": m.role, "content": m.content} for m in request.conversation_history] if request.conversation_history else None
+        history = [{"role": m.role, "content": m.content} for m in chat_request.conversation_history] if chat_request.conversation_history else None
         user_id = user.get("user_id", "demo_user")
-        return ChatResponse(**await chat_service.chat(request.message, history, user_id))
+        return ChatResponse(**await chat_service.chat(chat_request.message, history, user_id))
     except Exception as e:
         raise HTTPException(500, f"Chat error: {e}")
 
 
 @app.get("/appointments/departments")
-async def get_departments():
+@limiter.limit("60/minute")
+async def get_departments(request: Request):
+    """Get all departments. Rate limited: 60/min"""
     return appointment_service.get_departments()
 
 
 @app.get("/appointments/slots")
-async def get_available_slots(date: str, department: str, doctor: str):
+@limiter.limit("60/minute")
+async def get_available_slots(request: Request, date: str, department: str, doctor: str):
+    """Get available slots. Rate limited: 60/min"""
     return {"date": date, "department": department, "doctor": doctor, 
             "available_slots": appointment_service.get_available_slots(date, department, doctor)}
 
 
 @app.get("/appointments/my")
-async def get_my_appointments(user: dict = Depends(verify_token)):
+@limiter.limit("30/minute")
+async def get_my_appointments(request: Request, user: dict = Depends(verify_token)):
+    """Get user's appointments. Rate limited: 30/min"""
     return {"appointments": appointment_service.get_user_appointments(user.get("user_id", "demo_user"))}
 
 
 @app.post("/appointments/book")
-async def book_appointment(request: BookAppointmentRequest, user: dict = Depends(verify_token)):
+@limiter.limit("10/minute")
+async def book_appointment(request: Request, book_request: BookAppointmentRequest, user: dict = Depends(verify_token)):
+    """Book an appointment. Rate limited: 10/min"""
     result = appointment_service.book_appointment(
-        user.get("user_id", "demo_user"), request.patient_name, request.patient_age,
-        request.patient_gender, request.department, request.doctor, request.date, request.time
+        user.get("user_id", "demo_user"), book_request.patient_name, book_request.patient_age,
+        book_request.patient_gender, book_request.department, book_request.doctor, book_request.date, book_request.time
     )
     if not result["success"]:
         raise HTTPException(400, result["error"])
@@ -158,7 +177,9 @@ async def book_appointment(request: BookAppointmentRequest, user: dict = Depends
 
 
 @app.delete("/appointments/{appointment_id}")
-async def cancel_appointment(appointment_id: str, user: dict = Depends(verify_token)):
+@limiter.limit("10/minute")
+async def cancel_appointment(request: Request, appointment_id: str, user: dict = Depends(verify_token)):
+    """Cancel an appointment. Rate limited: 10/min"""
     result = appointment_service.cancel_appointment(appointment_id, user.get("user_id", "demo_user"))
     if not result["success"]:
         raise HTTPException(400, result["error"])
@@ -166,19 +187,25 @@ async def cancel_appointment(appointment_id: str, user: dict = Depends(verify_to
 
 
 @app.get("/appointments/doctor/today")
-async def get_doctor_today_appointments(doctor: dict = Depends(verify_doctor)):
+@limiter.limit("30/minute")
+async def get_doctor_today_appointments(request: Request, doctor: dict = Depends(verify_doctor)):
+    """Get doctor's today appointments. Rate limited: 30/min"""
     appointments = appointment_service.get_doctor_appointments_today(doctor["doctor_name"])
     return {"appointments": appointments, "count": len(appointments)}
 
 
 @app.get("/appointments/doctor/all")
-async def get_doctor_all_appointments(doctor: dict = Depends(verify_doctor)):
+@limiter.limit("30/minute")
+async def get_doctor_all_appointments(request: Request, doctor: dict = Depends(verify_doctor)):
+    """Get all doctor appointments. Rate limited: 30/min"""
     appointments = appointment_service.get_doctor_all_appointments(doctor["doctor_name"])
     return {"appointments": appointments, "count": len(appointments)}
 
 
 @app.get("/appointments/doctor/past-week")
-async def get_doctor_past_week_appointments(doctor: dict = Depends(verify_doctor)):
+@limiter.limit("30/minute")
+async def get_doctor_past_week_appointments(request: Request, doctor: dict = Depends(verify_doctor)):
+    """Get doctor's past week appointments. Rate limited: 30/min"""
     appointments = appointment_service.get_doctor_past_week_appointments(doctor["doctor_name"])
     return {"appointments": appointments, "count": len(appointments)}
 
