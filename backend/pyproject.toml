@@ -5,10 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "livekit-agents[openai,silero,turn-detector,google,groq,cartesia]~=1.2",
+    "livekit-agents[openai,silero,turn-detector,google,groq,cartesia,deepgram]~=1.2",
     "livekit-plugins-noise-cancellation~=0.2",
     "livekit-plugins-google>=1.2.18",
     "livekit-plugins-groq>=0.1.0",
+    "livekit-plugins-deepgram>=1.0.0",
+    "livekit-plugins-cartesia>=1.0.0",
     "python-dotenv>=1.2.1",
     "llama-index>=0.11.0",
     "llama-index-embeddings-openai>=0.2.0",

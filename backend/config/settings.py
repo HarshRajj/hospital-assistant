@@ -59,13 +59,23 @@ class Settings:
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     
-    # CORS Configuration
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-    ]
+    # CORS Configuration - includes Vercel deployments
+    @property
+    def CORS_ORIGINS(self) -> list[str]:
+        origins = [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+        ]
+        # Add custom frontend URL from environment
+        frontend_url = os.getenv("FRONTEND_URL", "")
+        if frontend_url:
+            origins.append(frontend_url)
+        return origins
+    
+    # Allow all origins in production (for Vercel preview deployments)
+    CORS_ALLOW_ALL: bool = os.getenv("CORS_ALLOW_ALL", "false").lower() == "true"
     
     def validate_livekit(self) -> bool:
         """Check if LiveKit credentials are configured."""
