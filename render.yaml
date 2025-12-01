@@ -5,40 +5,104 @@ services:
     runtime: python
     region: oregon
     plan: free
-    branch: main
-    buildCommand: cd backend && pip install uv && uv sync
-    startCommand: cd backend && uv run uvicorn api.server:app --host 0.0.0.0 --port $PORT
+    branch: finalized
+    rootDir: backend
+    buildCommand: pip install uv && uv sync
+    startCommand: uv run uvicorn api.server:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      # LiveKit
       - key: LIVEKIT_URL
         sync: false
       - key: LIVEKIT_API_KEY
         sync: false
       - key: LIVEKIT_API_SECRET
         sync: false
+      # AI/LLM Keys
       - key: OPENAI_API_KEY
         sync: false
-      - key: PYTHON_VERSION
-        value: 3.11.0
-    
-  # LiveKit Voice Agent (Worker)
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      # TTS/STT
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: CARTESIA_VOICE
+        sync: false
+      # RAG
+      - key: RAG_STORAGE_TYPE
+        value: local
+      - key: RAG_EMBEDDING_PROVIDER
+        value: gemini
+      - key: RAG_GEMINI_EMBEDDING_MODEL
+        value: text-embedding-004
+      - key: RAG_SIMILARITY_TOP_K
+        value: "1"
+      - key: RAG_DATA_PATH
+        value: data/Knowledgebase.txt
+      - key: RAG_LOCAL_STORAGE_DIR
+        value: storage/local_index
+      # Clerk
+      - key: CLERK_SECRET_KEY
+        sync: false
+      # CORS - set your Vercel frontend URL
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOW_ALL
+        value: "true"
+    healthCheckPath: /health
+
+  # LiveKit Voice Agent (Background Worker)
   - type: worker
     name: hospital-voice-agent
     runtime: python
     region: oregon
     plan: free
-    branch: main
-    buildCommand: cd backend && pip install uv && uv sync && uv run scripts/upload_embeddings.py --storage local
-    startCommand: cd backend && uv run voice-agent/query_engine.py start
+    branch: finalized
+    rootDir: backend
+    buildCommand: pip install uv && uv sync
+    startCommand: uv run python voice-agent/agent.py start
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      # LiveKit
       - key: LIVEKIT_URL
         sync: false
       - key: LIVEKIT_API_KEY
         sync: false
       - key: LIVEKIT_API_SECRET
         sync: false
+      # AI/LLM Keys
       - key: OPENAI_API_KEY
         sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false
+      # TTS/STT
       - key: DEEPGRAM_API_KEY
         sync: false
-      - key: PYTHON_VERSION
-        value: 3.11.0
+      - key: CARTESIA_API_KEY
+        sync: false
+      - key: CARTESIA_VOICE
+        sync: false
+      # RAG
+      - key: RAG_STORAGE_TYPE
+        value: local
+      - key: RAG_EMBEDDING_PROVIDER
+        value: gemini
+      - key: RAG_GEMINI_EMBEDDING_MODEL
+        value: text-embedding-004
+      - key: RAG_SIMILARITY_TOP_K
+        value: "1"
+      - key: RAG_DATA_PATH
+        value: data/Knowledgebase.txt
+      - key: RAG_LOCAL_STORAGE_DIR
+        value: storage/local_index
+      # Clerk
+      - key: CLERK_SECRET_KEY
+        sync: false
