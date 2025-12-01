@@ -1,41 +1,10 @@
 import VoiceAssistant from "./components/VoiceAssistant";
 import ChatAssistant from "./components/ChatAssistant";
-import CalendarBooking from "./components/CalendarBooking";
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50/50 selection:bg-blue-100 selection:text-blue-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 glass border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-600/20">
-                A
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 tracking-tight">Arogya Med-City</h1>
-                <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">Premium Healthcare</p>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-600 border border-red-100">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-                Emergency: 911
-              </div>
-              <div className="flex items-center gap-2 text-green-600">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                24/7 Available
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
         {/* Hero Section */}
@@ -89,32 +58,32 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Appointment Booking Section */}
-        <section>
-          <div className="mb-10">
-            <h3 className="text-3xl font-bold text-gray-900">Book an Appointment</h3>
-            <p className="text-gray-500 mt-2">Schedule your visit with our expert doctors</p>
-          </div>
-          
-          <SignedIn>
-            <CalendarBooking />
-          </SignedIn>
-          <SignedOut>
-            <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-6">
-                <div className="text-4xl">📅</div>
-              </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">Sign In to Book Appointments</h4>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-md mx-auto mb-8">
-                Create a free account to book appointments with our specialist doctors and manage your healthcare schedule.
-              </p>
+        {/* Quick Book CTA Section */}
+        <section className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+              <h3 className="text-3xl font-bold mb-2">Ready to Book an Appointment?</h3>
+              <p className="text-blue-100 text-lg">Schedule your visit with our expert doctors in just a few clicks</p>
+            </div>
+            <SignedIn>
+              <a
+                href="/book"
+                className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:scale-105 flex items-center gap-3"
+              >
+                <span className="text-xl">📅</span>
+                Book Now
+              </a>
+            </SignedIn>
+            <SignedOut>
               <SignUpButton mode="modal">
-                <button className="px-8 py-4 text-base font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all hover:scale-105">
-                  Sign Up to Book Appointments
+                <button className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:scale-105">
+                  Sign Up to Book
                 </button>
               </SignUpButton>
-            </div>
-          </SignedOut>
+            </SignedOut>
+          </div>
         </section>
 
         {/* Departments Grid */}
