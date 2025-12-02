@@ -210,6 +210,30 @@ async def get_doctor_past_week_appointments(request: Request, doctor: dict = Dep
     return {"appointments": appointments, "count": len(appointments)}
 
 
+class DoctorCancelRequest(BaseModel):
+    reason: str = ""
+
+
+@app.delete("/appointments/doctor/{appointment_id}")
+@limiter.limit("10/minute")
+async def doctor_cancel_appointment(
+    request: Request, 
+    appointment_id: str, 
+    body: DoctorCancelRequest = None,
+    doctor: dict = Depends(verify_doctor)
+):
+    """Cancel an appointment as a doctor. Rate limited: 10/min"""
+    reason = body.reason if body else ""
+    result = appointment_service.cancel_appointment_by_doctor(
+        appointment_id, 
+        doctor["doctor_name"],
+        reason
+    )
+    if not result["success"]:
+        raise HTTPException(400, result["error"])
+    return result
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT)

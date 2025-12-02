@@ -1,4 +1,7 @@
 """RAG service for hospital knowledge base retrieval."""
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import threading
 from typing import Optional
 
 from llama_index.core.indices import VectorStoreIndex
@@ -10,14 +13,25 @@ from pinecone import Pinecone
 
 from config import settings as app_settings
 
+# Thread pool for running sync operations - created per-thread
+_thread_local = threading.local()
+
+
+def _get_executor():
+    """Get or create a thread-local executor."""
+    if not hasattr(_thread_local, 'executor'):
+        _thread_local.executor = ThreadPoolExecutor(max_workers=2)
+    return _thread_local.executor
+
 
 class RAGService:
     """Service for RAG-based hospital knowledge retrieval."""
     
     def __init__(self):
+        # Don't initialize anything here - defer to first use
         self._index: Optional[VectorStoreIndex] = None
-        self._configure_settings()
-        self._load_index()
+        self._initialized = False
+        self._lock = threading.Lock()
     
     def _configure_settings(self):
         """Configure LlamaIndex settings."""
@@ -27,6 +41,17 @@ class RAGService:
             model_name=app_settings.GEMINI_EMBEDDING_MODEL,
             api_key=app_settings.GOOGLE_API_KEY
         )
+    
+    def _initialize_sync(self):
+        """Initialize the service synchronously - called from thread pool."""
+        with self._lock:
+            if self._initialized:
+                return
+            
+            print("🔄 Initializing RAG service...")
+            self._configure_settings()
+            self._load_index()
+            self._initialized = True
     
     def _load_index(self):
         """Load vector index from configured storage (Pinecone or local)."""
@@ -68,8 +93,31 @@ class RAGService:
             print(f"❌ Local storage error: {e}")
     
     def is_available(self) -> bool:
-        """Check if the knowledge base is loaded and available."""
-        return self._index is not None
+        """Check if the knowledge base can be loaded."""
+        return True  # Always return True, we'll init lazily
+    
+    def _sync_search(self, query: str) -> str:
+        """Synchronous search - runs in thread pool to avoid event loop issues."""
+        # Initialize on first use (in the thread pool thread)
+        self._initialize_sync()
+        
+        if self._index is None:
+            return "Knowledge base is not available. Please call (555) 100-2000 for assistance."
+        
+        try:
+            query_engine = self._index.as_query_engine(
+                similarity_top_k=app_settings.RAG_SIMILARITY_TOP_K,
+                response_mode="compact",
+                streaming=False
+            )
+            # Use sync query to avoid gRPC event loop issues
+            response = query_engine.query(query)
+            result = str(response)
+            print(f"✅ RAG search result for '{query}': {result[:100]}...")
+            return result
+        except Exception as e:
+            print(f"❌ RAG search error: {e}")
+            return f"Error searching knowledge base. Please call (555) 100-2000."
     
     async def search(self, query: str) -> str:
         """Search the hospital knowledge base.
@@ -80,20 +128,16 @@ class RAGService:
         Returns:
             Answer from the knowledge base
         """
-        if not self.is_available():
-            return "Knowledge base is not available."
-        
         try:
-            query_engine = self._index.as_query_engine(
-                similarity_top_k=app_settings.RAG_SIMILARITY_TOP_K,
-                response_mode="compact",
-                streaming=False
-            )
-            response = await query_engine.aquery(query)
-            return str(response)
+            loop = asyncio.get_running_loop()
+            executor = _get_executor()
+            # Run sync search in thread pool to avoid gRPC event loop conflicts
+            result = await loop.run_in_executor(executor, self._sync_search, query)
+            return result
         except Exception as e:
-            print(f"❌ RAG search error: {e}")
-            return "Error accessing knowledge base."
+            print(f"❌ RAG async search error: {e}")
+            return "Error accessing knowledge base. Please call (555) 100-2000."
 
 
+# Create instance but don't initialize - initialization happens on first search
 rag_service = RAGService()

@@ -63,6 +63,7 @@ def create_gemini_embeddings():
     # Create vector store index
     print(f"\n🔧 Creating vector index with Gemini embeddings...")
     print(f"   Chunk size: {Settings.chunk_size}")
+    
     index = VectorStoreIndex.from_documents(
         documents,
         embed_model=embed_model,

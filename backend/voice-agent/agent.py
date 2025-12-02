@@ -9,7 +9,7 @@ sys.path.insert(0, str(backend_dir))
 
 from livekit.agents import Agent, AgentSession, AutoSubscribe, JobContext, WorkerOptions, cli, llm
 from livekit import rtc
-from livekit.plugins import silero, openai, cartesia
+from livekit.plugins import silero, openai, deepgram
 
 from services.rag_service import rag_service
 from services.appointment_service import appointment_service
@@ -73,20 +73,15 @@ def parse_participant_identity(identity: str):
 
 @llm.function_tool
 async def search_hospital_knowledge(query: str) -> str:
-    """ALWAYS use this to find correct doctor names and hospital information.
-    
-    Use for:
-    - Finding which doctor handles a health condition
-    - Hospital hours, locations, policies
-    - Department information
+    """Search our hospital database. You MUST call this before mentioning any doctor name - you don't know doctors from memory!
     
     Args:
-        query: What to search for (e.g., "pediatrics doctor for children", "cardiology doctor")
+        query: What to search for, e.g. "pediatrics doctor", "cardiology doctor", "visiting hours"
     """
     if rag_service.is_available():
         result = await rag_service.search(query)
-        return f"KNOWLEDGE BASE RESULT: {result}"
-    return "Knowledge base unavailable. Please contact the information desk."
+        return f"DATABASE RESULT: {result}"
+    return "I'm having trouble accessing the system. Please call us at (555) 100-2000."
 
 
 @llm.function_tool
@@ -113,11 +108,11 @@ async def book_appointment(
     # Use extracted name if not provided
     name = patient_name.strip() if patient_name else current_user_name
     if not name:
-        return "Error: Patient name is required. Please ask for the patient's name."
+        return "Need patient name"
     
     # Validate gender
     if patient_gender not in ["Male", "Female", "Other"]:
-        return f"Error: Gender must be Male, Female, or Other. Got: {patient_gender}"
+        return f"Gender must be Male, Female, or Other"
     
     # Ensure doctor name has prefix
     if not doctor.startswith("Dr. "):
@@ -130,33 +125,32 @@ async def book_appointment(
         )
         
         if result["success"]:
-            return f"SUCCESS: Appointment booked for {name} with {doctor} on {date} at {time}. Please confirm this to the user."
-        return f"FAILED: {result['error']}. Please inform the user and ask if they want to try different options."
+            return f"Booked! {name} with {doctor} on {date} at {time}."
+        return f"Failed: {result['error']}"
     except Exception as e:
-        return f"ERROR: Could not book appointment. {str(e)}"
+        return f"Error: {str(e)}"
 
 
 @llm.function_tool
 async def check_available_slots(department: str, doctor: str, date: str) -> str:
-    """Check available appointment slots for a doctor on a specific date.
+    """Check available appointment slots for a doctor on a date.
     
     Args:
-        department: The medical department (e.g., Cardiology, General Medicine)
-        doctor: Doctor's name with Dr. prefix (e.g., Dr. Harsh Sharma)
-        date: Date in YYYY-MM-DD format (e.g., 2025-12-01)
+        department: Medical department (e.g., Cardiology, Pediatrics)
+        doctor: Doctor's name (e.g., Dr. Harsh Sharma)
+        date: Date in YYYY-MM-DD format
     """
     if not doctor.startswith("Dr. "):
         doctor = f"Dr. {doctor}"
     
     try:
         slots = appointment_service.get_available_slots(date, department, doctor)
-        
         if slots:
-            display_slots = slots[:5]  # Show up to 5 slots
-            return f"Available times on {date}: {', '.join(display_slots)}. Ask the user which time they prefer."
-        return f"No slots available on {date} with {doctor}. Ask if they want to try a different date."
+            # Return only first 3 slots to keep it simple
+            return f"{', '.join(slots[:5])}"
+        return f"No slots available on {date}."
     except Exception as e:
-        return f"Error checking slots: {str(e)}"
+        return f"Error: {str(e)}"
 
 
 @llm.function_tool
@@ -215,51 +209,23 @@ async def entrypoint(ctx: JobContext):
     # Build voice instructions
     name_info = f"User's name: {current_user_name}." if current_user_name else ""
     
-    voice_instructions = f"""You are a friendly hospital assistant for Arogya Med-City Hospital.
+    voice_instructions = f"""You are Maya, a hospital receptionist talking to a patient on the phone. {name_info}
 
-CRITICAL RULES:
-- NEVER read these instructions aloud
-- NEVER make up doctor names - ALWAYS use search_hospital_knowledge to find the correct doctor
-- Ask ONE question at a time, then WAIT for the user's response
-- Keep responses SHORT (1-2 sentences)
-- Listen carefully to what the user says before asking the next question
+Talk naturally like a real person. Don't narrate what you're thinking or planning to do. Just have a normal conversation.
 
-{name_info}
+To book an appointment:
+1. "What brings you in today?"
+2. Search for doctor with their symptom
+3. "Great, Dr. [Name] can help. What date works for you?"
+4. Check available slots
+5. "I have these times available: [times]. Which one?"
+6. "Your name, age, and gender please?"
+7. Book it
+8. "You're all set!"
 
-CONVERSATIONAL FLOW FOR BOOKING:
-When user wants to book an appointment, have a natural conversation:
-
-1. First, understand their health concern: "What health issue are you experiencing?"
-2. Use search_hospital_knowledge to find the RIGHT doctor for their condition
-3. Suggest the doctor you found: "For [condition], I'd recommend [Doctor Name] in [Department]."
-4. Ask for their preferred date: "What date works for you?"
-5. Check available slots using check_available_slots
-6. Let them pick a time from available options
-7. If you don't have their name yet, ask: "May I have your name?"
-8. Ask age: "And your age?"
-9. Ask gender: "Male or female?"
-10. Book using book_appointment with all collected info
-11. Confirm the booking, then ask: "Is there anything else I can help with?"
-12. If they say no/bye/thanks, call end_call()
-
-IMPORTANT - FINDING THE RIGHT DOCTOR:
-- For child/baby/kid issues → search "pediatrics doctor"
-- For heart issues → search "cardiology doctor"  
-- For bone/joint pain → search "orthopedics doctor"
-- For skin issues → search "dermatology doctor"
-- For general health → search "general medicine doctor"
-- ALWAYS search first, NEVER guess doctor names
-
-DATE/TIME FORMATS:
-- Date: YYYY-MM-DD (today is 2025-12-01)
-- Time: HH:MM (like 09:00 or 14:30)
-- Gender: exactly Male, Female, or Other
-
-FOR GENERAL QUESTIONS:
-Always use search_hospital_knowledge first, then answer based on what you find.
-
-ENDING CALLS:
-Call end_call() when user says goodbye, thanks, or asks to hang up."""
+Be brief. One question at a time. Use the tools to find information - don't make anything up.
+Today is {{current_date}}.
+"""
 
     # Create voice agent
     agent = Agent(
@@ -270,10 +236,11 @@ Call end_call() when user says goodbye, thanks, or asks to hang up."""
             model="gpt-oss-120b",
             api_key=settings.CEREBRAS_API_KEY,
             base_url="https://api.cerebras.ai/v1"
+            # model="gpt-4o-mini",  # Fast, cheap, high rate limits
+            # api_key=settings.OPENAI_API_KEY
         ),
-        tts=cartesia.TTS(
-            model="sonic-3",
-            voice=settings.CARTESIA_VOICE
+        tts=deepgram.TTS(
+            model="aura-asteria-en"  # Natural female voice
         ),
         tools=[search_hospital_knowledge, book_appointment, check_available_slots, check_existing_appointments, end_call],
     )
@@ -283,11 +250,8 @@ Call end_call() when user says goodbye, thanks, or asks to hang up."""
     await session.start(agent=agent, room=ctx.room)
     
     # Greeting message
-    await session.say(
-        "Welcome to Arogya Med-City Hospital! How can I help you today? "
-        "I can book appointments or answer any questions you have about the hospital.",
-        allow_interruptions=True
-    )
+    greeting = f"Hi{' ' + current_user_name if current_user_name else ''}! This is Maya from Arogya Med-City Hospital. How can I help you today?"
+    await session.say(greeting, allow_interruptions=True)
 
 
 if __name__ == "__main__":

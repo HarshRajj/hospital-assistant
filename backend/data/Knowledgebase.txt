@@ -107,7 +107,7 @@
 - **Description:** Comprehensive care for heart-related conditions
 - **Common Conditions Treated:** Hypertension, coronary artery disease, heart failure, arrhythmia, post-heart attack care
 - **Staff Physicians:**
-  - **Dr. Harsh Sharma (MD, FACC)**
+  - **Dr. Harsh Sharma (Male, MD, FACC)**
     - **Languages:** English, Hindi, Marathi
     - **Availability:** Mon-Fri, 9:00 AM - 5:00 PM
     - **Accepting New Patients:** Yes
@@ -118,7 +118,7 @@
 - **Description:** Medical care for infants, children, and adolescents
 - **Common Conditions Treated:** Routine check-ups, vaccinations, common cold/flu, asthma, developmental screenings
 - **Staff Physicians:**
-  - **Dr. Arjun Gupta (MBBS, DCH)**
+  - **Dr. Arjun Gupta (Male, MBBS, DCH)**
     - **Languages:** English, Hindi
     - **Availability:** Mon, Wed, Fri, 10:00 AM - 6:00 PM
     - **Accepting New Patients:** Yes, by referral only
@@ -197,15 +197,15 @@
 - **Description:** Primary care and management of adult medical conditions
 - **Common Conditions Treated:** Diabetes, hypertension, respiratory infections, thyroid disorders, general health check-ups
 - **Staff Physicians:**
-  - **Dr. Rajesh Kumar (MBBS, MD - Internal Medicine)**
+  - **Dr. Rajesh Kumar (Male, MBBS, MD - Internal Medicine)**
     - **Languages:** English, Hindi, Tamil
     - **Availability:** Mon-Sat, 8:00 AM - 2:00 PM
     - **Accepting New Patients:** Yes
-  - **Dr. Kavita Joshi (MBBS, MD - Internal Medicine)**
+  - **Dr. Kavita Joshi (Female, MBBS, MD - Internal Medicine)**
     - **Languages:** English, Hindi
     - **Availability:** Mon, Wed, Thu, Fri, 2:00 PM - 8:00 PM
     - **Accepting New Patients:** Yes
-  - **Dr. Suresh Iyer (MBBS, MD - Internal Medicine)**
+  - **Dr. Suresh Iyer (Male, MBBS, MD - Internal Medicine)**
     - **Languages:** English, Hindi, Malayalam
     - **Availability:** Tue, Thu, Sat, 9:00 AM - 3:00 PM
     - **Accepting New Patients:** Yes

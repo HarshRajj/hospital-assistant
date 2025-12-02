@@ -36,12 +36,66 @@ class AppointmentService:
         "Gastroenterology": ["Dr. Anil Verma"],
         "Nephrology": ["Dr. Pooja Nair"],
         "OB-GYN": ["Dr. Sneha Pillai", "Dr. Ritu Kapoor"],
+        "Ophthalmology": ["Dr. Manish Agarwal"],
+        "ENT": ["Dr. Deepak Rao"],
+        "Psychiatry": ["Dr. Shalini Gupta", "Dr. Aryan Choudhury"],
+        "Pulmonology": ["Dr. Karan Bhatia"],
+        "Endocrinology": ["Dr. Nisha Patel"],
+        "Urology": ["Dr. Abhishek Jain"],
+        "Rheumatology": ["Dr. Priyanka Sharma"],
     }
     
-    TIME_SLOTS = [
-        "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-        "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-        "15:00", "15:30", "16:00", "16:30", "17:00"
+    # Doctor working hours and days from Knowledgebase
+    DOCTOR_SCHEDULE = {
+        # Cardiology
+        "Dr. Harsh Sharma": {"days": [0, 1, 2, 3, 4], "start": "09:00", "end": "17:00"},  # Mon-Fri, 9AM-5PM
+        # Pediatrics
+        "Dr. Arjun Gupta": {"days": [0, 2, 4], "start": "10:00", "end": "18:00"},  # Mon, Wed, Fri, 10AM-6PM
+        # Orthopedics
+        "Dr. Sameer Khan": {"days": [1, 3, 5], "start": "08:00", "end": "16:00"},  # Tue, Thu, Sat, 8AM-4PM
+        # Neurology
+        "Dr. Ananya Reddy": {"days": [0, 1, 2, 3], "start": "11:00", "end": "19:00"},  # Mon-Thu, 11AM-7PM
+        # Oncology
+        "Dr. Fatima Ahmed": {"days": [0, 1, 2, 3, 4], "start": "09:00", "end": "17:00"},  # By appointment
+        # Dermatology
+        "Dr. Meera Desai": {"days": [0, 2, 4], "start": "09:00", "end": "17:00"},  # Mon, Wed, Fri, 9AM-5PM
+        "Dr. Rohit Malhotra": {"days": [1, 3, 5], "start": "10:00", "end": "16:00"},  # Tue, Thu, Sat, 10AM-4PM
+        # General Surgery
+        "Dr. Vikram Singh": {"days": [0, 1, 2, 3, 4], "start": "07:00", "end": "15:00"},  # Mon-Fri, 7AM-3PM
+        "Dr. Anjali Mehta": {"days": [1, 2, 4], "start": "09:00", "end": "17:00"},  # Tue, Wed, Fri, 9AM-5PM
+        # General Medicine
+        "Dr. Rajesh Kumar": {"days": [0, 1, 2, 3, 4, 5], "start": "08:00", "end": "14:00"},  # Mon-Sat, 8AM-2PM
+        "Dr. Kavita Joshi": {"days": [0, 2, 3, 4], "start": "14:00", "end": "20:00"},  # Mon, Wed, Thu, Fri, 2PM-8PM
+        "Dr. Suresh Iyer": {"days": [1, 3, 5], "start": "09:00", "end": "15:00"},  # Tue, Thu, Sat, 9AM-3PM
+        # Gastroenterology
+        "Dr. Anil Verma": {"days": [0, 2, 4], "start": "10:00", "end": "18:00"},  # Mon, Wed, Fri, 10AM-6PM
+        # Nephrology
+        "Dr. Pooja Nair": {"days": [1, 3, 5], "start": "09:00", "end": "16:00"},  # Tue, Thu, Sat, 9AM-4PM
+        # OB-GYN
+        "Dr. Sneha Pillai": {"days": [0, 1, 2, 3, 4], "start": "09:00", "end": "17:00"},  # Mon-Fri, 9AM-5PM
+        "Dr. Ritu Kapoor": {"days": [0, 2, 3], "start": "10:00", "end": "18:00"},  # Mon, Wed, Thu, 10AM-6PM
+        # Ophthalmology
+        "Dr. Manish Agarwal": {"days": [0, 1, 3, 4], "start": "08:00", "end": "16:00"},  # Mon, Tue, Thu, Fri, 8AM-4PM
+        # ENT
+        "Dr. Deepak Rao": {"days": [0, 2, 4], "start": "09:00", "end": "17:00"},  # Mon, Wed, Fri, 9AM-5PM
+        # Psychiatry
+        "Dr. Shalini Gupta": {"days": [0, 1, 2, 3, 4], "start": "10:00", "end": "18:00"},  # Mon-Fri, 10AM-6PM
+        "Dr. Aryan Choudhury": {"days": [1, 3, 5], "start": "11:00", "end": "17:00"},  # Tue, Thu, Sat, 11AM-5PM
+        # Pulmonology
+        "Dr. Karan Bhatia": {"days": [0, 2, 4], "start": "09:00", "end": "16:00"},  # Mon, Wed, Fri, 9AM-4PM
+        # Endocrinology
+        "Dr. Nisha Patel": {"days": [1, 3], "start": "10:00", "end": "17:00"},  # Tue, Thu, 10AM-5PM
+        # Urology
+        "Dr. Abhishek Jain": {"days": [0, 1, 3], "start": "08:00", "end": "15:00"},  # Mon, Tue, Thu, 8AM-3PM
+        # Rheumatology
+        "Dr. Priyanka Sharma": {"days": [2, 4], "start": "10:00", "end": "16:00"},  # Wed, Fri, 10AM-4PM
+    }
+    
+    # Default time slots (30-min intervals)
+    ALL_TIME_SLOTS = [
+        "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
+        "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30"
     ]
     
     def __init__(self):
@@ -78,18 +132,47 @@ class AppointmentService:
         with open(self.data_file, "w") as f:
             json.dump(data, f, indent=2)
     
+    def _get_doctor_time_slots(self, doctor: str, date: str) -> List[str]:
+        """Get valid time slots for a doctor on a specific date based on their schedule."""
+        schedule = self.DOCTOR_SCHEDULE.get(doctor)
+        if not schedule:
+            # Default 9AM-5PM Mon-Fri if doctor not in schedule
+            return [s for s in self.ALL_TIME_SLOTS if "09:00" <= s < "17:00"]
+        
+        # Check if doctor works on this day of week
+        try:
+            appointment_date = datetime.strptime(date, "%Y-%m-%d").date()
+            day_of_week = appointment_date.weekday()  # 0=Monday, 6=Sunday
+            
+            if day_of_week not in schedule["days"]:
+                return []  # Doctor doesn't work this day
+            
+            # Filter slots within doctor's working hours
+            start = schedule["start"]
+            end = schedule["end"]
+            return [s for s in self.ALL_TIME_SLOTS if start <= s < end]
+        except ValueError:
+            return []
+    
     def get_available_slots(self, date: str, department: str, doctor: str) -> List[str]:
         """Get available time slots for a specific date, department, and doctor."""
         self._load_from_file()  # Reload to get latest appointments
         
+        # Get doctor's working slots for this date
+        doctor_slots = self._get_doctor_time_slots(doctor, date)
+        if not doctor_slots:
+            return []  # Doctor doesn't work this day
+        
+        # Remove already booked slots
         booked_slots = [
             apt.time for apt in self.appointments.values()
             if apt.date == date and apt.department == department 
             and apt.doctor == doctor and apt.status == "confirmed"
         ]
         
-        available = [slot for slot in self.TIME_SLOTS if slot not in booked_slots]
+        available = [slot for slot in doctor_slots if slot not in booked_slots]
         
+        # If today, filter out past times
         try:
             appointment_date = datetime.strptime(date, "%Y-%m-%d").date()
             today = datetime.now().date()
@@ -106,22 +189,27 @@ class AppointmentService:
     def book_appointment(self, user_id: str, patient_name: str, patient_age: int,
                         patient_gender: str, department: str, doctor: str, date: str, time: str) -> Dict:
         """Book a new appointment."""
+        # Reload to get latest appointments (prevent race conditions)
+        self._load_from_file()
+        
         # Validate inputs
         if department not in self.DEPARTMENTS:
             return {"success": False, "error": f"Invalid department"}
         if doctor not in self.DEPARTMENTS[department]:
             return {"success": False, "error": f"Doctor not in {department}"}
-        if time not in self.TIME_SLOTS:
-            return {"success": False, "error": "Invalid time slot"}
+        
+        # Check if time is valid for this doctor's schedule
+        doctor_slots = self._get_doctor_time_slots(doctor, date)
+        if not doctor_slots:
+            return {"success": False, "error": f"{doctor} is not available on this day"}
+        if time not in doctor_slots:
+            return {"success": False, "error": f"Invalid time - {doctor} works {self.DOCTOR_SCHEDULE.get(doctor, {}).get('start', '09:00')} to {self.DOCTOR_SCHEDULE.get(doctor, {}).get('end', '17:00')}"}
         
         try:
             if datetime.strptime(date, "%Y-%m-%d").date() < datetime.now().date():
                 return {"success": False, "error": "Cannot book in the past"}
         except ValueError:
             return {"success": False, "error": "Invalid date format (YYYY-MM-DD)"}
-        
-        if time not in self.get_available_slots(date, department, doctor):
-            return {"success": False, "error": f"Slot {time} not available"}
         
         if not patient_name or len(patient_name.strip()) < 2:
             return {"success": False, "error": "Invalid patient name"}
@@ -130,11 +218,31 @@ class AppointmentService:
         if patient_gender not in ["Male", "Female", "Other"]:
             return {"success": False, "error": "Gender must be Male, Female, or Other"}
         
-        # Check if user already has an appointment on this date
-        existing_on_date = [
+        # CHECK 1: Is the doctor's slot already taken by ANY user?
+        doctor_booked_at_time = [
             apt for apt in self.appointments.values()
-            if apt.user_id == user_id and apt.date == date and apt.status == "confirmed"
+            if apt.doctor == doctor and apt.date == date and apt.time == time and apt.status == "confirmed"
         ]
+        if doctor_booked_at_time:
+            return {"success": False, "error": f"{doctor} already has an appointment at {time} on {date}. Please choose a different time."}
+        
+        # CHECK 2: Does THIS user already have an appointment at the same time (any doctor)?
+        user_booked_at_time = [
+            apt for apt in self.appointments.values()
+            if apt.user_id == user_id and apt.date == date and apt.time == time and apt.status == "confirmed"
+        ]
+        if user_booked_at_time:
+            existing = user_booked_at_time[0]
+            return {"success": False, "error": f"You already have an appointment with {existing.doctor} at {time} on {date}. Please choose a different time."}
+        
+        # CHECK 3: Does THIS user already have an appointment with the SAME doctor on the SAME day?
+        user_same_doctor_same_day = [
+            apt for apt in self.appointments.values()
+            if apt.user_id == user_id and apt.doctor == doctor and apt.date == date and apt.status == "confirmed"
+        ]
+        if user_same_doctor_same_day:
+            existing = user_same_doctor_same_day[0]
+            return {"success": False, "error": f"You already have an appointment with {doctor} at {existing.time} on {date}. You can only book one appointment per doctor per day."}
         
         # Create and save appointment
         self._counter += 1
@@ -150,11 +258,16 @@ class AppointmentService:
         self.appointments[apt_id] = appointment
         self._save_to_file()
         
-        # Add note if multiple appointments on same day
+        # Check if user has other appointments on same day (for info only)
+        other_appointments = [
+            apt for apt in self.appointments.values()
+            if apt.user_id == user_id and apt.date == date and apt.id != apt_id and apt.status == "confirmed"
+        ]
+        
         message = f"Booked {patient_name} with {doctor} on {date} at {time}"
-        if existing_on_date:
-            existing_details = ", ".join([f"{apt.doctor} at {apt.time}" for apt in existing_on_date])
-            message += f". Note: You already have appointment(s) on this date with {existing_details}"
+        if other_appointments:
+            existing_details = ", ".join([f"{apt.doctor} at {apt.time}" for apt in other_appointments])
+            message += f". Note: You also have appointment(s) on this date with {existing_details}"
         
         return {"success": True, "appointment": appointment.model_dump(), "message": message}
     
@@ -189,7 +302,7 @@ class AppointmentService:
         return apts
     
     def cancel_appointment(self, appointment_id: str, user_id: str) -> Dict:
-        """Cancel an appointment."""
+        """Cancel an appointment (by patient)."""
         self._load_from_file()
         if appointment_id not in self.appointments:
             return {"success": False, "error": "Appointment not found"}
@@ -201,6 +314,28 @@ class AppointmentService:
         apt.status = "cancelled"
         self._save_to_file()
         return {"success": True, "message": f"Appointment {appointment_id} cancelled"}
+    
+    def cancel_appointment_by_doctor(self, appointment_id: str, doctor_name: str, reason: str = "") -> Dict:
+        """Cancel an appointment (by doctor)."""
+        self._load_from_file()
+        if appointment_id not in self.appointments:
+            return {"success": False, "error": "Appointment not found"}
+        
+        apt = self.appointments[appointment_id]
+        if apt.doctor != doctor_name:
+            return {"success": False, "error": "Unauthorized - this appointment is not with you"}
+        
+        if apt.status != "confirmed":
+            return {"success": False, "error": f"Cannot cancel - appointment is already {apt.status}"}
+        
+        apt.status = "cancelled_by_doctor"
+        self._save_to_file()
+        
+        message = f"Appointment {appointment_id} with {apt.patient_name} on {apt.date} at {apt.time} has been cancelled"
+        if reason:
+            message += f". Reason: {reason}"
+        
+        return {"success": True, "message": message, "patient_user_id": apt.user_id}
     
     def get_all_appointments(self) -> List[Dict]:
         """Get all confirmed appointments."""

@@ -1,0 +1,8 @@
+livekit-agents>=1.2.0
+python-dotenv
+aiohttp
+# Add the specific plugins you are using (examples below)
+livekit-plugins-openai
+livekit-plugins-deepgram
+livekit-plugins-silero
+livekit-plugins-cartesia

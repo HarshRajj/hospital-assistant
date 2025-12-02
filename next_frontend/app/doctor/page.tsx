@@ -31,6 +31,7 @@ export default function DoctorDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [pastWeekAppointments, setPastWeekAppointments] = useState<Appointment[]>([]);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     checkDoctorAccess();
@@ -145,6 +146,40 @@ export default function DoctorDashboard() {
       fetchPastWeekAppointments(),
     ]);
     setLoading(false);
+  };
+
+  const cancelAppointment = async (appointmentId: string) => {
+    const reason = prompt("Enter reason for cancellation (optional):");
+    if (reason === null) return; // User clicked cancel
+    
+    setCancellingId(appointmentId);
+    try {
+      const token = await getToken();
+      const email = user?.primaryEmailAddress?.emailAddress || "";
+      const response = await fetch(`${BACKEND_URL}/appointments/doctor/${appointmentId}`, {
+        method: "DELETE",
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "X-User-Email": email,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ reason }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Failed to cancel: ${errorData.detail || "Unknown error"}`);
+        return;
+      }
+      
+      alert("Appointment cancelled successfully");
+      await refreshData();
+    } catch (err) {
+      console.error("Error cancelling appointment:", err);
+      alert("Failed to cancel appointment");
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   if (loading) {
@@ -264,7 +299,13 @@ export default function DoctorDashboard() {
             ) : (
               <div className="space-y-4">
                 {currentAppointments.map((apt) => (
-                  <AppointmentCard key={apt.id} appointment={apt} />
+                  <AppointmentCard 
+                    key={apt.id} 
+                    appointment={apt} 
+                    onCancel={cancelAppointment}
+                    isCancelling={cancellingId === apt.id}
+                    showCancelButton={activeTab !== "past"}
+                  />
                 ))}
               </div>
             )}
@@ -315,7 +356,17 @@ function TabButton({ active, onClick, label, count }: { active: boolean; onClick
   );
 }
 
-function AppointmentCard({ appointment }: { appointment: Appointment }) {
+function AppointmentCard({ 
+  appointment, 
+  onCancel, 
+  isCancelling, 
+  showCancelButton 
+}: { 
+  appointment: Appointment; 
+  onCancel?: (id: string) => void;
+  isCancelling?: boolean;
+  showCancelButton?: boolean;
+}) {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -327,20 +378,22 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
   };
 
   const isExpired = appointment.status === "expired";
+  const isCancelled = appointment.status === "cancelled" || appointment.status === "cancelled_by_doctor";
+  const canCancel = showCancelButton && !isExpired && !isCancelled;
 
   return (
     <div className={`flex items-center justify-between p-6 border rounded-xl transition-all ${
-      isExpired 
+      isExpired || isCancelled
         ? "border-gray-200 bg-gray-50 opacity-75" 
         : "border-gray-200 hover:border-blue-200 hover:bg-blue-50/30"
     }`}>
       <div className="flex-1">
         <div className="flex items-center gap-4 mb-3">
-          <h3 className={`text-lg font-bold ${isExpired ? "text-gray-500" : "text-gray-900"}`}>
+          <h3 className={`text-lg font-bold ${isExpired || isCancelled ? "text-gray-500" : "text-gray-900"}`}>
             {appointment.patient_name}
           </h3>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-            isExpired ? "bg-gray-100 text-gray-500" : "bg-blue-50 text-blue-700"
+            isExpired || isCancelled ? "bg-gray-100 text-gray-500" : "bg-blue-50 text-blue-700"
           }`}>
             {appointment.patient_age} yrs
           </span>
@@ -348,11 +401,13 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
             {appointment.patient_gender}
           </span>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-            isExpired 
-              ? "bg-gray-200 text-gray-500" 
-              : "bg-green-50 text-green-700"
+            isCancelled
+              ? "bg-red-50 text-red-700"
+              : isExpired 
+                ? "bg-gray-200 text-gray-500" 
+                : "bg-green-50 text-green-700"
           }`}>
-            {appointment.status}
+            {appointment.status === "cancelled_by_doctor" ? "Cancelled by you" : appointment.status}
           </span>
         </div>
         
@@ -377,7 +432,20 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
           <div className="text-xs text-gray-500">Appointment ID</div>
           <div className="text-sm font-mono text-gray-700">{appointment.id}</div>
         </div>
-        <div className={`w-2 h-2 rounded-full ${isExpired ? "bg-gray-400" : "bg-green-500"}`}></div>
+        
+        {canCancel && onCancel && (
+          <button
+            onClick={() => onCancel(appointment.id)}
+            disabled={isCancelling}
+            className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCancelling ? "Cancelling..." : "Cancel"}
+          </button>
+        )}
+        
+        <div className={`w-2 h-2 rounded-full ${
+          isCancelled ? "bg-red-400" : isExpired ? "bg-gray-400" : "bg-green-500"
+        }`}></div>
       </div>
     </div>
   );
