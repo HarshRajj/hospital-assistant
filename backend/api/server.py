@@ -34,6 +34,11 @@ async def verify_token(
     token = authorization.replace("Bearer ", "")
     if token in ("test", "demo"):
         return {"user_id": "demo_user", "email": ""}
+        
+    # Allow agent impersonation
+    if token.startswith("agent:"):
+        user_id = token.split("agent:", 1)[1]
+        return {"user_id": user_id, "email": ""}
     
     try:
         decoded = jwt.decode(token, options={"verify_signature": False})

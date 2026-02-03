@@ -71,6 +71,51 @@ def parse_participant_identity(identity: str):
 
 # ========== TOOL DEFINITIONS ==========
 
+# ========== REMOTE API HELPERS ==========
+
+API_URL = "https://hospital-assistant-api.onrender.com"
+
+async def _api_request(method: str, endpoint: str, data: dict = None) -> dict:
+    """Make an authenticated request to the backend API."""
+    import aiohttp
+    
+    url = f"{API_URL}{endpoint}"
+    # Use agent impersonation token
+    token = f"agent:{current_user_id}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        try:
+            if method == "GET":
+                async with session.get(url, headers=headers, params=data) as response:
+                    if response.status >= 400:
+                        try:
+                            error_data = await response.json()
+                            error_msg = error_data.get("detail", str(response.status))
+                        except:
+                            error_msg = await response.text()
+                        raise Exception(f"API Error: {error_msg}")
+                    return await response.json()
+            elif method == "POST":
+                async with session.post(url, headers=headers, json=data) as response:
+                    if response.status >= 400:
+                        try:
+                            error_data = await response.json()
+                            error_msg = error_data.get("detail", str(response.status))
+                        except:
+                            error_msg = await response.text()
+                        raise Exception(f"API Error: {error_msg}")
+                    return await response.json()
+        except Exception as e:
+            print(f"API Request failed: {e}")
+            raise e
+
+
+# ========== TOOL DEFINITIONS ==========
+
 @llm.function_tool
 async def search_hospital_knowledge(query: str) -> str:
     """Search our hospital database. You MUST call this before mentioning any doctor name - you don't know doctors from memory!
@@ -79,6 +124,7 @@ async def search_hospital_knowledge(query: str) -> str:
         query: What to search for, e.g. "pediatrics doctor", "cardiology doctor", "visiting hours"
     """
     if rag_service.is_available():
+        # rag_service.search is already async and handles thread pool internally
         result = await rag_service.search(query)
         return f"DATABASE RESULT: {result}"
     return "I'm having trouble accessing the system. Please call us at (555) 100-2000."
@@ -119,14 +165,22 @@ async def book_appointment(
         doctor = f"Dr. {doctor}"
     
     try:
-        result = appointment_service.book_appointment(
-            current_user_id, name, patient_age, patient_gender,
-            department, doctor, date, time
-        )
+        # payload matches BookAppointmentRequest in server.py
+        payload = {
+            "patient_name": name,
+            "patient_age": patient_age,
+            "patient_gender": patient_gender,
+            "department": department,
+            "doctor": doctor,
+            "date": date,
+            "time": time
+        }
         
-        if result["success"]:
+        result = await _api_request("POST", "/appointments/book", payload)
+        
+        if result.get("success"):
             return f"Booked! {name} with {doctor} on {date} at {time}."
-        return f"Failed: {result['error']}"
+        return f"Failed: {result.get('error', 'Unknown error')}"
     except Exception as e:
         return f"Error: {str(e)}"
 
@@ -144,9 +198,17 @@ async def check_available_slots(department: str, doctor: str, date: str) -> str:
         doctor = f"Dr. {doctor}"
     
     try:
-        slots = appointment_service.get_available_slots(date, department, doctor)
+        # GET /appointments/slots?date=...&department=...&doctor=...
+        params = {
+            "date": date,
+            "department": department,
+            "doctor": doctor
+        }
+        data = await _api_request("GET", "/appointments/slots", params)
+        slots = data.get("available_slots", [])
+        
         if slots:
-            # Return only first 3 slots to keep it simple
+            # Return only first 5 slots to keep it simple
             return f"{', '.join(slots[:5])}"
         return f"No slots available on {date}."
     except Exception as e:
@@ -156,12 +218,23 @@ async def check_available_slots(department: str, doctor: str, date: str) -> str:
 @llm.function_tool
 async def check_existing_appointments(date: str) -> str:
     """Check if user has existing appointments on a date."""
-    existing = appointment_service.get_user_appointments_on_date(current_user_id, date)
-    
-    if existing:
-        details = ", ".join([f"{apt['doctor']} at {apt['time']}" for apt in existing])
-        return f"You have {len(existing)} appointment(s) on {date}: {details}"
-    return f"No appointments on {date}."
+    try:
+        # GET /appointments/my (filters applied in client logic usually, but here we fetch all and filter)
+        # Or better: server.py doesn't have filtering by date on the endpoint /appointments/my.
+        # We fetch all and filter here.
+        
+        data = await _api_request("GET", "/appointments/my")
+        all_apts = data.get("appointments", [])
+        
+        # Filter for date
+        existing = [apt for apt in all_apts if apt.get("date") == date and apt.get("status") == "confirmed"]
+        
+        if existing:
+            details = ", ".join([f"{apt['doctor']} at {apt['time']}" for apt in existing])
+            return f"You have {len(existing)} appointment(s) on {date}: {details}"
+        return f"No appointments on {date}."
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 @llm.function_tool
@@ -215,7 +288,7 @@ Talk naturally like a real person. Don't narrate what you're thinking or plannin
 
 To book an appointment:
 1. "What brings you in today?"
-2. Search for doctor with their symptom
+2. Search hospital knowledge ONLY ONCE for the symptom. If no doctor is found for the exact symptom, suggest the General Medicine department.
 3. "Great, Dr. [Name] can help. What date works for you?"
 4. Check available slots
 5. "I have these times available: [times]. Which one?"
@@ -224,6 +297,7 @@ To book an appointment:
 8. "You're all set!"
 
 Be brief. One question at a time. Use the tools to find information - don't make anything up.
+If a search fails, do NOT try to search again with slight variations. Just ask the user for clarification or suggest General Medicine.
 Today is {{current_date}}.
 """
 
@@ -239,9 +313,10 @@ Today is {{current_date}}.
             # model="gpt-4o-mini",  # Fast, cheap, high rate limits
             # api_key=settings.OPENAI_API_KEY
         ),
-        tts=deepgram.TTS(
-            model="aura-asteria-en"  # Natural female voice
-        ),
+        # tts=deepgram.TTS(
+        #     model="aura-asteria-en"  # Natural female voice
+        # ),
+        tts=openai.TTS(model="tts-1", voice="alloy"),
         tools=[search_hospital_knowledge, book_appointment, check_available_slots, check_existing_appointments, end_call],
     )
 
@@ -251,7 +326,7 @@ Today is {{current_date}}.
     
     # Greeting message
     greeting = f"Hi{' ' + current_user_name if current_user_name else ''}! This is Maya from Arogya Med-City Hospital. How can I help you today?"
-    await session.say(greeting, allow_interruptions=True)
+    await session.say(greeting, allow_interruptions=False)
 
 
 if __name__ == "__main__":
